@@ -64,6 +64,20 @@ export class DeploymentService {
     return this.prisma.shift.create({ data: { ...dto, tenantId } as any });
   }
 
+  async getSupervisorTeam(tenantId: string, userId: string) {
+    const site = await this.prisma.site.findFirst({ where: { tenantId, supervisorId: userId, isActive: true } });
+    if (!site) return { success: true, data: [], message: 'No site assigned to this supervisor' };
+    const data = await this.prisma.deployment.findMany({
+      where: { tenantId, siteId: site.id, status: 'ACTIVE' },
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true, personalPhone: true, designation: { select: { name: true } } } },
+        shift: { select: { name: true, startTime: true, endTime: true } },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+    return { success: true, data, message: 'Team fetched', meta: { siteId: site.id, siteName: site.name } };
+  }
+
   async getStrength(tenantId: string, tenderId: string) {
     const deployments = await this.prisma.deployment.groupBy({
       by: ['siteId'],

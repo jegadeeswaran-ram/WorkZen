@@ -130,6 +130,50 @@ export class AttendanceService {
     });
   }
 
+  async getSupervisorTeamTodayAttendance(tenantId: string, userId: string) {
+    const site = await this.prisma.site.findFirst({ where: { tenantId, supervisorId: userId, isActive: true } });
+    if (!site) return { success: true, data: [], message: 'No site assigned' };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const deployments = await this.prisma.deployment.findMany({
+      where: { tenantId, siteId: site.id, status: 'ACTIVE' },
+      select: { employeeId: true, employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true } } },
+    });
+    const employeeIds = deployments.map(d => d.employeeId);
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { tenantId, employeeId: { in: employeeIds }, date: { gte: today } },
+      select: { employeeId: true, status: true, checkInTime: true, checkOutTime: true, workHours: true },
+    });
+    const attMap = new Map(records.map(r => [r.employeeId, r]));
+    const data = deployments.map(d => ({
+      employeeId: d.employeeId,
+      employee: d.employee,
+      status: attMap.get(d.employeeId)?.status ?? null,
+      checkInTime: attMap.get(d.employeeId)?.checkInTime ?? null,
+      checkOutTime: attMap.get(d.employeeId)?.checkOutTime ?? null,
+    }));
+    return { success: true, data, message: 'Team attendance fetched', meta: { siteId: site.id, date: today.toISOString() } };
+  }
+
+  async getSupervisorTeamLeaveRequests(tenantId: string, userId: string, status?: string) {
+    const site = await this.prisma.site.findFirst({ where: { tenantId, supervisorId: userId, isActive: true } });
+    if (!site) return { success: true, data: [], message: 'No site assigned' };
+    const deployments = await this.prisma.deployment.findMany({
+      where: { tenantId, siteId: site.id, status: 'ACTIVE' },
+      select: { employeeId: true },
+    });
+    const employeeIds = deployments.map(d => d.employeeId);
+    const data = await this.prisma.leaveRequest.findMany({
+      where: { tenantId, employeeId: { in: employeeIds }, ...(status ? { status: status as any } : {}) },
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true } },
+        leaveType: { select: { id: true, name: true, category: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    return { success: true, data, message: 'Team leave requests fetched' };
+  }
+
   async getTodayAttendance(tenantId: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);

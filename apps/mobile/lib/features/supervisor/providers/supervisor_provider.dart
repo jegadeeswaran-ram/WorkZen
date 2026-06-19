@@ -44,10 +44,7 @@ List<Map<String, dynamic>> _parseList(dynamic responseData) {
 final supervisorTeamProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiClientProvider);
-  final r = await api.get(
-    '/deployment',
-    queryParameters: {'status': 'ACTIVE', 'limit': 100},
-  );
+  final r = await api.get('/deployment/my-team');
   return _parseList(r.data);
 });
 
@@ -60,7 +57,7 @@ final supervisorTeamProvider =
 final teamTodayAttendanceProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiClientProvider);
-  final r = await api.get('/attendance/today');
+  final r = await api.get('/attendance/my-team-today');
   return _parseList(r.data);
 });
 
@@ -74,8 +71,8 @@ final pendingLeaveRequestsProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiClientProvider);
   final r = await api.get(
-    '/attendance/leave-requests',
-    queryParameters: {'status': 'PENDING', 'limit': 50},
+    '/attendance/my-team-leave-requests',
+    queryParameters: {'status': 'PENDING'},
   );
   return _parseList(r.data);
 });
@@ -87,10 +84,7 @@ final pendingLeaveRequestsProvider =
 final supervisorLeaveRequestsHistoryProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiClientProvider);
-  final r = await api.get(
-    '/attendance/leave-requests',
-    queryParameters: {'limit': 20},
-  );
+  final r = await api.get('/attendance/my-team-leave-requests');
   return _parseList(r.data);
 });
 

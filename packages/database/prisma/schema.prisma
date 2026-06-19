@@ -573,6 +573,7 @@ model User {
   reportedComplaints   SiteComplaint[]   @relation("ComplaintReporter")
   assignedComplaints   SiteComplaint[]   @relation("ComplaintAssignee")
   activityLogs         SiteActivityLog[] @relation("ActivityLogSupervisor")
+  supervisedSites      Site[]            @relation("SiteSupervisor")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -1163,27 +1164,30 @@ model OfferLetter {
 // ============================================================
 
 model Site {
-  id          String    @id @default(cuid())
-  tenantId    String
-  name        String
-  code        String?
-  address     Json
-  latitude    Decimal?  @db.Decimal(10, 8)
-  longitude   Decimal?  @db.Decimal(11, 8)
-  geoFenceRadius Int?   @default(100)
-  contactName String?
-  contactPhone String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  tenantId       String
+  name           String
+  code           String?
+  address        Json
+  latitude       Decimal?  @db.Decimal(10, 8)
+  longitude      Decimal?  @db.Decimal(11, 8)
+  geoFenceRadius Int?      @default(100)
+  contactName    String?
+  contactPhone   String?
+  supervisorId   String?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  deployments Deployment[]
-  shifts      Shift[]
-  complaints      SiteComplaint[]
-  activityLogs    SiteActivityLog[]
+  supervisor   User?      @relation("SiteSupervisor", fields: [supervisorId], references: [id])
+  deployments  Deployment[]
+  shifts       Shift[]
+  complaints   SiteComplaint[]
+  activityLogs SiteActivityLog[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
+  @@index([supervisorId])
   @@map("sites")
 }
 

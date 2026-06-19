@@ -61,7 +61,9 @@ export class AttendanceController {
 
   @Patch('leave-requests/:id/approve') @RequirePermissions('leave:approve')
   approveLeave(@TenantId() t: string, @Param('id') id: string, @Body() body: any, @CurrentUser('id') uid: string) {
-    return this.service.approveLeave(t, id, uid, body.action, body.remarks);
+    // mobile sends { status: 'APPROVED'|'REJECTED' }, web sends { action: '...' }
+    const action = (body.action ?? body.status) as 'APPROVED' | 'REJECTED';
+    return this.service.approveLeave(t, id, uid, action, body.remarks);
   }
 
   @Post('leave-requests') @RequirePermissions('leave:write')
@@ -72,6 +74,14 @@ export class AttendanceController {
 
   @Get('today') @RequirePermissions('attendance:read')
   getToday(@TenantId() t: string) { return this.service.getTodayAttendance(t); }
+
+  @Get('my-team-today') @RequirePermissions('attendance:read')
+  myTeamToday(@TenantId() t: string, @CurrentUser('id') uid: string) { return this.service.getSupervisorTeamTodayAttendance(t, uid); }
+
+  @Get('my-team-leave-requests') @RequirePermissions('leave:read')
+  myTeamLeaveRequests(@TenantId() t: string, @CurrentUser('id') uid: string, @Query('status') status?: string) {
+    return this.service.getSupervisorTeamLeaveRequests(t, uid, status);
+  }
 
   // ── BIOMETRIC ────────────────────────────────────────────
   @Post('biometric/import') @RequirePermissions('attendance:write')

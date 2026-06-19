@@ -84,7 +84,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   ],
   SITE_SUPERVISOR: [
     'employee:read', 'attendance:read', 'attendance:mark',
-    'leave:read', 'deployment:read', 'roster:read',
+    'leave:read', 'leave:write', 'leave:approve', 'deployment:read', 'roster:read',
+    'complaint:read', 'complaint:write', 'activity-log:read', 'activity-log:write',
   ],
   FIELD_OFFICER: ['attendance:mark', 'attendance:read', 'deployment:read', 'roster:read'],
   CLIENT_USER: ['invoice:read', 'deployment:read', 'report:read'],
@@ -494,6 +495,11 @@ async function main() {
     }),
   ]);
   const [siteGgn, siteDel, siteFbd] = namedSites;
+
+  // Link supervisors to their sites (now that both sites and supervisors exist)
+  await prisma.site.update({ where: { id: siteGgn.id }, data: { supervisorId: supGgn.id } });
+  await prisma.site.update({ where: { id: siteDel.id }, data: { supervisorId: supDel.id } });
+  await prisma.site.update({ where: { id: siteFbd.id }, data: { supervisorId: supFbd.id } });
 
   // ── 12. Shifts ──────────────────────────────────────────────────────────────
   const shifts: Record<string, string> = {};

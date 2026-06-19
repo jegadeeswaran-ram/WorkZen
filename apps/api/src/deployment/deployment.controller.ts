@@ -36,6 +36,9 @@ export class DeploymentController {
   @Get('strength/:tenderId') @RequirePermissions('deployment:read')
   strength(@TenantId() t: string, @Param('tenderId') tid: string) { return this.service.getStrength(t, tid); }
 
+  @Get('my-team') @RequirePermissions('deployment:read')
+  myTeam(@TenantId() t: string, @CurrentUser('id') uid: string) { return this.service.getSupervisorTeam(t, uid); }
+
   @Get() @RequirePermissions('deployment:read')
   getAll(@TenantId() t: string, @Query() q: PaginationDto) { return this.service.getDeployments(t, q); }
 
