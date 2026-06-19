@@ -40,7 +40,11 @@ export class DeploymentService {
   }
 
   async getSites(tenantId: string) {
-    return this.prisma.site.findMany({ where: { tenantId, isActive: true }, orderBy: { name: 'asc' } });
+    return this.prisma.site.findMany({
+      where: { tenantId, isActive: true },
+      include: { supervisor: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      orderBy: { name: 'asc' },
+    });
   }
 
   async createSite(tenantId: string, dto: Record<string, unknown>, _userId: string) {
