@@ -118,6 +118,23 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ActionCard(
+                      label: 'Complaints',
+                      icon: Icons.report_problem_outlined,
+                      color: Colors.orange,
+                      onTap: () => context.push('/supervisor/complaints', extra: ''),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SizedBox()),
+                  const SizedBox(width: 12),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
 
               const SizedBox(height: 24),
 

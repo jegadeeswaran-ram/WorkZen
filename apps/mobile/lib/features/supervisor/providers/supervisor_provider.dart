@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 
@@ -129,4 +130,89 @@ final supervisorDashboardStatsProvider =
     onLeaveToday: onLeaveToday,
     pendingApprovals: pending.length,
   );
+});
+
+// ---------------------------------------------------------------------------
+// Complaint Model
+// ---------------------------------------------------------------------------
+
+class SiteComplaint {
+  final String id;
+  final String siteId;
+  final String category;
+  final String severity;
+  final String status;
+  final String title;
+  final String description;
+  final String createdAt;
+
+  const SiteComplaint({
+    required this.id,
+    required this.siteId,
+    required this.category,
+    required this.severity,
+    required this.status,
+    required this.title,
+    required this.description,
+    required this.createdAt,
+  });
+
+  factory SiteComplaint.fromJson(Map<String, dynamic> j) => SiteComplaint(
+        id: j['id'] as String,
+        siteId: j['siteId'] as String,
+        category: j['category'] as String,
+        severity: j['severity'] as String,
+        status: j['status'] as String,
+        title: j['title'] as String,
+        description: j['description'] as String,
+        createdAt: j['createdAt'] as String,
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Complaints Notifier
+// ---------------------------------------------------------------------------
+
+class ComplaintsNotifier
+    extends StateNotifier<AsyncValue<List<SiteComplaint>>> {
+  ComplaintsNotifier(this._dio) : super(const AsyncValue.loading());
+  final Dio _dio;
+
+  Future<void> load(String siteId) async {
+    state = const AsyncValue.loading();
+    try {
+      final res = await _dio.get(
+        '/complaints',
+        queryParameters: {'siteId': siteId},
+      );
+      final list = (res.data['data'] as List)
+          .map((e) => SiteComplaint.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = AsyncValue.data(list);
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
+  }
+
+  Future<void> create({
+    required String siteId,
+    required String category,
+    required String severity,
+    required String title,
+    required String description,
+  }) async {
+    await _dio.post('/complaints', data: {
+      'siteId': siteId,
+      'category': category,
+      'severity': severity,
+      'title': title,
+      'description': description,
+    });
+  }
+}
+
+final complaintsProvider = StateNotifierProvider<ComplaintsNotifier,
+    AsyncValue<List<SiteComplaint>>>((ref) {
+  final dio = ref.watch(apiClientProvider);
+  return ComplaintsNotifier(dio);
 });
