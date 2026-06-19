@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { activityLogApi, api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ const INCIDENT_TYPES = ['SAFETY', 'OPERATIONAL', 'HR', 'COMPLIANCE', 'EQUIPMENT'
 interface Props { siteId: string; defaultValues?: any; onSuccess?: () => void; }
 
 export function ActivityLogForm({ siteId, defaultValues, onSuccess }: Props) {
-  const { register, handleSubmit } = useForm({ defaultValues });
+  const { register, handleSubmit, reset } = useForm({ defaultValues });
   const [hasIncident, setHasIncident] = useState(defaultValues?.hasIncident ?? false);
   const [incidentType, setIncidentType] = useState(defaultValues?.incidentType ?? '');
   const [photoUrls, setPhotoUrls] = useState<string[]>(defaultValues?.photoUrls ?? []);
@@ -39,9 +39,19 @@ export function ActivityLogForm({ siteId, defaultValues, onSuccess }: Props) {
   };
 
   const mutation = useMutation({
-    mutationFn: (data: any) => activityLogApi.save({ ...data, siteId, hasIncident, incidentType: hasIncident ? incidentType : undefined, photoUrls }),
+    mutationFn: (data: any) => {
+      if (hasIncident && !incidentType) {
+        toast.error('Please select an incident type');
+        throw new Error('Incident type required');
+      }
+      return activityLogApi.save({ ...data, siteId, hasIncident, incidentType: hasIncident ? incidentType : undefined, photoUrls });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['activity-log', siteId] });
+      reset();
+      setHasIncident(false);
+      setIncidentType('');
+      setPhotoUrls([]);
       setSubmitted(true);
       toast.success('Activity log saved!');
       setTimeout(() => { setSubmitted(false); onSuccess?.(); }, 2000);
