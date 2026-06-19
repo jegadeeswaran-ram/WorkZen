@@ -152,10 +152,10 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                     _SectionTitle(title: 'Pending Approvals', count: items.length),
                     const SizedBox(height: 12),
                     if (items.isEmpty)
-                      _EmptyApprovals()
+                      const _EmptyApprovals()
                     else ...[
                       ...items.take(5).map((item) => _ApprovalItem(item: item)),
-                      if (items.length > 5) ...[
+                      if (items.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         GestureDetector(
                           onTap: () => context.go('/supervisor/approvals'),
@@ -506,6 +506,21 @@ class _SectionTitle extends StatelessWidget {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ────────────────────────────────────────────────────────────────────────────
+
+String _shortDate(String? iso) {
+  if (iso == null) return '—';
+  try {
+    final d = DateTime.parse(iso);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${d.day} ${months[d.month-1]}';
+  } catch (_) {
+    return iso;
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Pending Approval Item
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -522,23 +537,9 @@ class _ApprovalItem extends StatelessWidget {
     final lastName = employee['lastName'] as String? ?? '';
     final fullName = '$firstName $lastName'.trim().isEmpty ? 'Unknown' : '$firstName $lastName'.trim();
     final leaveTypeName = leaveType['name'] as String? ?? 'Leave';
-    final startDate = item['startDate'] as String? ?? '';
-    final endDate = item['endDate'] as String? ?? '';
+    final startDate = item['startDate'] as String?;
+    final endDate = item['endDate'] as String?;
     final days = item['days'];
-
-    String _shortDate(String iso) {
-      if (iso.isEmpty) return '—';
-      try {
-        final dt = DateTime.parse(iso);
-        final months = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-        return '${dt.day} ${months[dt.month - 1]}';
-      } catch (_) {
-        return iso.length >= 10 ? iso.substring(0, 10) : iso;
-      }
-    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
