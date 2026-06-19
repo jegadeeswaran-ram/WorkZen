@@ -54,13 +54,13 @@ export class ComplaintsService {
     if (dto.status === ComplaintStatus.RESOLVED) extra.resolvedAt = new Date();
     if (dto.escalatedToId) extra.escalatedAt = new Date();
     return this.prisma.siteComplaint.update({
-      where: { id },
+      where: { id, tenantId },
       data: { ...dto, ...extra },
     });
   }
 
   async remove(tenantId: string, id: string) {
     await this.findOne(tenantId, id);
-    return this.prisma.siteComplaint.update({ where: { id }, data: { deletedAt: new Date() } });
+    return this.prisma.siteComplaint.update({ where: { id, tenantId }, data: { deletedAt: new Date() } });
   }
 }
