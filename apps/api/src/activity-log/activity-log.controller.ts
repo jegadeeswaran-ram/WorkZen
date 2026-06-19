@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Query, Param, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ActivityLogService } from './activity-log.service';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
@@ -41,6 +41,16 @@ export class ActivityLogController {
   ) {
     const data = await this.activityLogService.upsert(tenantId, supervisorId, dto);
     return { success: true, data, message: 'Activity log saved' };
+  }
+
+  @Patch(':id')
+  async partialUpdate(
+    @TenantId() tenantId: string,
+    @Param('id') id: string,
+    @Body() dto: CreateActivityLogDto,
+  ) {
+    const data = await this.activityLogService.partialUpdate(tenantId, id, dto);
+    return { success: true, data, message: 'Activity log updated' };
   }
 
   @Post('upload-photo')

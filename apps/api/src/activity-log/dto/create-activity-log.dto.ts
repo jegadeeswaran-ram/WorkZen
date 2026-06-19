@@ -1,4 +1,4 @@
-import { IsString, IsInt, IsBoolean, IsOptional, IsNotEmpty, IsDateString, Min } from 'class-validator';
+import { IsString, IsInt, IsBoolean, IsOptional, IsNotEmpty, IsDateString, Min, IsArray } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateActivityLogDto {
@@ -9,5 +9,5 @@ export class CreateActivityLogDto {
   @IsBoolean() @IsOptional() hasIncident?: boolean;
   @IsString() @IsOptional() incidentType?: string;
   @IsString() @IsOptional() incidentDesc?: string;
-  @IsOptional() photoUrls?: string[];
+  @IsOptional() @IsArray() @IsString({ each: true }) photoUrls?: string[];
 }
