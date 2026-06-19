@@ -229,19 +229,21 @@ class _TeamMemberCard extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
           radius: 24,
-          backgroundColor: AppTheme.primary.withOpacity(0.2),
-          backgroundImage:
-              (photo != null && photo.isNotEmpty) ? NetworkImage(photo) : null,
-          child: (photo == null || photo.isEmpty)
-              ? Text(
-                  initials,
-                  style: const TextStyle(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
-                )
+          backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+          foregroundImage: (photo != null && photo.isNotEmpty)
+              ? NetworkImage(photo)
               : null,
+          onForegroundImageError: (photo != null && photo.isNotEmpty)
+              ? (_, __) {} // ignore — falls through to child
+              : null,
+          child: Text(
+            initials,
+            style: const TextStyle(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+          ),
         ),
         title: Text(
           fullName,
@@ -361,20 +363,21 @@ class _EmployeeDetailSheet extends StatelessWidget {
             // Avatar
             CircleAvatar(
               radius: 40,
-              backgroundColor: AppTheme.primary.withOpacity(0.2),
-              backgroundImage: (photo != null && photo.isNotEmpty)
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
+              foregroundImage: (photo != null && photo.isNotEmpty)
                   ? NetworkImage(photo)
                   : null,
-              child: (photo == null || photo.isEmpty)
-                  ? Text(
-                      initials,
-                      style: const TextStyle(
-                        color: AppTheme.primary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 28,
-                      ),
-                    )
+              onForegroundImageError: (photo != null && photo.isNotEmpty)
+                  ? (_, __) {} // ignore — falls through to child
                   : null,
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 28,
+                ),
+              ),
             ),
             const SizedBox(height: 16),
 
