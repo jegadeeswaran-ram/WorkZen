@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main, master, develop]
 
 env:
   REGISTRY: ghcr.io
@@ -19,15 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo run lint type-check
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run type-check
 
   # ──────────────────────────────────────────
   # 2. Unit & Integration Tests
@@ -51,24 +49,21 @@ jobs:
         options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-        with:
-          version: 8
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          cache: npm
+      - run: npm ci
       - name: Generate Prisma Client
-        run: pnpm db:generate
+        run: npm run db:generate
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/workzen_test
       - name: Run DB Migrations
-        run: pnpm db:migrate
+        run: npm run db:migrate
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/workzen_test
       - name: Run Tests
-        run: pnpm turbo run test
+        run: npm test
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/workzen_test
           REDIS_URL: redis://localhost:6379
