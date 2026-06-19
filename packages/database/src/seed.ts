@@ -10,6 +10,7 @@ import {
   PayrollStatus, RecruitmentStatus, CandidateStatus,
   WorkflowStatus, AccountType,
   DocumentType, LeaveCategory, LeaveStatus,
+  ComplaintCategory, ComplaintSeverity, ComplaintStatus,
 } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import bcrypt from 'bcryptjs';
@@ -192,7 +193,6 @@ async function main() {
 
   // ── 4b. Site Supervisor Users (one per named site) ──────────────────────────
   console.log('Creating site supervisor users...');
-  const hashedSupPass = await bcrypt.hash('Supervisor@123', 10);
   const supervisorUsers = await Promise.all([
     prisma.user.upsert({
       where: { tenantId_email: { tenantId: T, email: 'supervisor.ggn@workzen.in' } },
@@ -200,7 +200,7 @@ async function main() {
       create: {
         tenantId: T,
         email: 'supervisor.ggn@workzen.in',
-        passwordHash: hashedSupPass,
+        passwordHash: await bcrypt.hash('Supervisor@123', 10),
         firstName: 'Vikram',
         lastName: 'Patel',
         status: 'ACTIVE',
@@ -213,7 +213,7 @@ async function main() {
       create: {
         tenantId: T,
         email: 'supervisor.del@workzen.in',
-        passwordHash: hashedSupPass,
+        passwordHash: await bcrypt.hash('Supervisor@123', 10),
         firstName: 'Anita',
         lastName: 'Verma',
         status: 'ACTIVE',
@@ -226,7 +226,7 @@ async function main() {
       create: {
         tenantId: T,
         email: 'supervisor.fbd@workzen.in',
-        passwordHash: hashedSupPass,
+        passwordHash: await bcrypt.hash('Supervisor@123', 10),
         firstName: 'Suresh',
         lastName: 'Yadav',
         status: 'ACTIVE',
@@ -825,7 +825,16 @@ async function main() {
 
     for (const c of complaintSamples) {
       await prisma.siteComplaint.create({
-        data: { tenantId: T, ...c } as any,
+        data: {
+          tenantId: T,
+          siteId: c.siteId,
+          reportedById: c.reportedById,
+          category: c.category as ComplaintCategory,
+          severity: c.severity as ComplaintSeverity,
+          title: c.title,
+          description: c.description,
+          status: c.status as ComplaintStatus,
+        },
       });
     }
   }
