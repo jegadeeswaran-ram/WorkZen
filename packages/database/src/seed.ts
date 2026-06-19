@@ -11,6 +11,7 @@ import {
   WorkflowStatus, AccountType,
   DocumentType, LeaveCategory, LeaveStatus,
 } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -88,6 +89,11 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   CLIENT_USER: ['invoice:read', 'deployment:read', 'report:read'],
   EMPLOYEE: ['attendance:mark', 'leave:read', 'leave:write', 'payslip:read', 'document:read'],
 };
+
+// ─── Site Employee Name Arrays ────────────────────────────────────────────────
+
+const firstNames = ['Arun','Priya','Rahul','Sunita','Manoj','Kavita','Deepak','Neha','Vijay','Anita','Suresh','Pooja','Amit','Rekha','Ravi'];
+const lastNames = ['Sharma','Kumar','Singh','Verma','Patel','Gupta','Yadav','Mishra','Tiwari','Joshi','Shah','Nair','Reddy','Pillai','Das'];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -180,6 +186,64 @@ async function main() {
         where: { userId_roleId: { userId: user.id, roleId: role.id } },
         update: {},
         create: { userId: user.id, roleId: role.id },
+      });
+    }
+  }
+
+  // ── 4b. Site Supervisor Users (one per named site) ──────────────────────────
+  console.log('Creating site supervisor users...');
+  const hashedSupPass = await bcrypt.hash('Supervisor@123', 10);
+  const supervisorUsers = await Promise.all([
+    prisma.user.upsert({
+      where: { tenantId_email: { tenantId: T, email: 'supervisor.ggn@workzen.in' } },
+      update: {},
+      create: {
+        tenantId: T,
+        email: 'supervisor.ggn@workzen.in',
+        passwordHash: hashedSupPass,
+        firstName: 'Vikram',
+        lastName: 'Patel',
+        status: 'ACTIVE',
+        emailVerifiedAt: new Date(),
+      },
+    }),
+    prisma.user.upsert({
+      where: { tenantId_email: { tenantId: T, email: 'supervisor.del@workzen.in' } },
+      update: {},
+      create: {
+        tenantId: T,
+        email: 'supervisor.del@workzen.in',
+        passwordHash: hashedSupPass,
+        firstName: 'Anita',
+        lastName: 'Verma',
+        status: 'ACTIVE',
+        emailVerifiedAt: new Date(),
+      },
+    }),
+    prisma.user.upsert({
+      where: { tenantId_email: { tenantId: T, email: 'supervisor.fbd@workzen.in' } },
+      update: {},
+      create: {
+        tenantId: T,
+        email: 'supervisor.fbd@workzen.in',
+        passwordHash: hashedSupPass,
+        firstName: 'Suresh',
+        lastName: 'Yadav',
+        status: 'ACTIVE',
+        emailVerifiedAt: new Date(),
+      },
+    }),
+  ]);
+  const [supGgn, supDel, supFbd] = supervisorUsers;
+
+  // Assign SITE_SUPERVISOR role to new supervisor users
+  const siteSupervisorRole = await prisma.role.findFirst({ where: { name: 'SITE_SUPERVISOR' } });
+  if (siteSupervisorRole) {
+    for (const supUser of supervisorUsers) {
+      await prisma.userRole.upsert({
+        where: { userId_roleId: { userId: supUser.id, roleId: siteSupervisorRole.id } },
+        update: {},
+        create: { userId: supUser.id, roleId: siteSupervisorRole.id },
       });
     }
   }
@@ -378,6 +442,59 @@ async function main() {
     }
   }
 
+  // ── 11b. Named Sites (supervisor dashboard sites) ───────────────────────────
+  const namedSites = await Promise.all([
+    prisma.site.upsert({
+      where: { tenantId_code: { tenantId: T, code: 'SITE-GGN-01' } },
+      update: {},
+      create: {
+        tenantId: T,
+        name: 'Gurugram Metro Station Complex',
+        code: 'SITE-GGN-01',
+        address: { street: 'Sector 29, Gurugram', city: 'Gurugram', state: 'Haryana', pincode: '122001' },
+        latitude: new Decimal('28.4595'),
+        longitude: new Decimal('77.0266'),
+        geoFenceRadius: 150,
+        contactName: 'Rajesh Kumar',
+        contactPhone: '9876543210',
+        isActive: true,
+      },
+    }),
+    prisma.site.upsert({
+      where: { tenantId_code: { tenantId: T, code: 'SITE-DEL-01' } },
+      update: {},
+      create: {
+        tenantId: T,
+        name: 'DMRC Rajiv Chowk Operations',
+        code: 'SITE-DEL-01',
+        address: { street: 'Connaught Place, New Delhi', city: 'New Delhi', state: 'Delhi', pincode: '110001' },
+        latitude: new Decimal('28.6328'),
+        longitude: new Decimal('77.2197'),
+        geoFenceRadius: 200,
+        contactName: 'Priya Sharma',
+        contactPhone: '9876543211',
+        isActive: true,
+      },
+    }),
+    prisma.site.upsert({
+      where: { tenantId_code: { tenantId: T, code: 'SITE-FBD-01' } },
+      update: {},
+      create: {
+        tenantId: T,
+        name: 'Faridabad Industrial Zone',
+        code: 'SITE-FBD-01',
+        address: { street: 'Sector 31, Faridabad', city: 'Faridabad', state: 'Haryana', pincode: '121003' },
+        latitude: new Decimal('28.4089'),
+        longitude: new Decimal('77.3178'),
+        geoFenceRadius: 100,
+        contactName: 'Amit Singh',
+        contactPhone: '9876543212',
+        isActive: true,
+      },
+    }),
+  ]);
+  const [siteGgn, siteDel, siteFbd] = namedSites;
+
   // ── 12. Shifts ──────────────────────────────────────────────────────────────
   const shifts: Record<string, string> = {};
   for (const s of [
@@ -545,6 +662,58 @@ async function main() {
     deployedEmpIds.add(empId);
   }
 
+  // ── 15b. Site Employees (15 per named site = 45 total) ──────────────────────
+  console.log('Creating 45 site employees with deployments...');
+  const designationIds = Object.values(designations);
+  const shiftIds = Object.values(shifts);
+  const siteEmployeeData = [
+    { site: siteGgn, prefix: 'GGN' },
+    { site: siteDel, prefix: 'DEL' },
+    { site: siteFbd, prefix: 'FBD' },
+  ];
+
+  for (const { site, prefix } of siteEmployeeData) {
+    for (let i = 1; i <= 15; i++) {
+      const emp = await prisma.employee.upsert({
+        where: { tenantId_employeeCode: { tenantId: T, employeeCode: `EMP-${prefix}-${String(i).padStart(3, '0')}` } },
+        update: {},
+        create: {
+          tenantId: T,
+          employeeCode: `EMP-${prefix}-${String(i).padStart(3, '0')}`,
+          firstName: firstNames[i % firstNames.length],
+          lastName: lastNames[i % lastNames.length],
+          personalPhone: `98765${prefix === 'GGN' ? '4' : prefix === 'DEL' ? '5' : '6'}${String(10000 + i)}`,
+          gender: i % 3 === 0 ? Gender.FEMALE : Gender.MALE,
+          dateOfBirth: new Date(`${1985 + (i % 15)}-${String((i % 12) + 1).padStart(2, '0')}-15`),
+          joiningDate: new Date('2024-01-01'),
+          designationId: designationIds[i % designationIds.length],
+          departmentId: Object.values(departments)[i % Object.values(departments).length],
+          employmentType: i % 4 === 0 ? 'PERMANENT' : 'CONTRACT',
+          status: EmployeeStatus.ACTIVE,
+          lifecycleStatus: 'DEPLOYED',
+        },
+      });
+
+      // Deploy to site
+      const existingDeploy = await prisma.deployment.findFirst({
+        where: { tenantId: T, employeeId: emp.id, siteId: site.id, status: DeploymentStatus.ACTIVE },
+      });
+      if (!existingDeploy) {
+        await prisma.deployment.create({
+          data: {
+            tenantId: T,
+            employeeId: emp.id,
+            siteId: site.id,
+            shiftId: shiftIds[i % shiftIds.length],
+            startDate: new Date('2024-01-15'),
+            status: DeploymentStatus.ACTIVE,
+            reportingManager: `EMP-${prefix}-001`,
+          },
+        });
+      }
+    }
+  }
+
   // ── 16. Attendance Records (May 2026) ───────────────────────────────────────
   console.log('Creating attendance records...');
   const attendanceEmpCodes = ['EMP-001','EMP-002','EMP-003','EMP-004','EMP-005','EMP-007','EMP-009','EMP-011','EMP-013','EMP-015'];
@@ -581,6 +750,118 @@ async function main() {
       }
     }
     await prisma.attendanceRecord.createMany({ data: attRecords, skipDuplicates: true });
+  }
+
+  // ── 16b. 90-day Attendance (Apr-Jun 2026) for site employees ────────────────
+  console.log('Creating 90-day attendance for site employees (Apr–Jun 2026)...');
+  const allSiteEmployees = await prisma.employee.findMany({
+    where: {
+      tenantId: T,
+      status: EmployeeStatus.ACTIVE,
+      employeeCode: { in: [
+        ...Array.from({ length: 15 }, (_, i) => `EMP-GGN-${String(i + 1).padStart(3, '0')}`),
+        ...Array.from({ length: 15 }, (_, i) => `EMP-DEL-${String(i + 1).padStart(3, '0')}`),
+        ...Array.from({ length: 15 }, (_, i) => `EMP-FBD-${String(i + 1).padStart(3, '0')}`),
+      ] },
+    },
+    select: { id: true },
+  });
+
+  const attendanceStatuses: AttendanceStatus[] = [
+    AttendanceStatus.PRESENT, AttendanceStatus.PRESENT, AttendanceStatus.PRESENT,
+    AttendanceStatus.PRESENT, AttendanceStatus.PRESENT,
+    AttendanceStatus.ABSENT, AttendanceStatus.HALF_DAY,
+  ];
+  const attStartDate = new Date('2026-04-01');
+  const attEndDate = new Date('2026-06-30');
+
+  for (const emp of allSiteEmployees) {
+    const current = new Date(attStartDate);
+    while (current <= attEndDate) {
+      const dayOfWeek = current.getDay();
+      if (dayOfWeek !== 0) { // skip Sundays
+        const status = attendanceStatuses[Math.floor(Math.random() * attendanceStatuses.length)];
+        const dateSnapshot = new Date(current);
+        await prisma.attendanceRecord.upsert({
+          where: { tenantId_employeeId_date: { tenantId: T, employeeId: emp.id, date: dateSnapshot } },
+          update: {},
+          create: {
+            tenantId: T,
+            employeeId: emp.id,
+            date: dateSnapshot,
+            status,
+            method: AttendanceMethod.BIOMETRIC,
+            checkInTime: status === AttendanceStatus.PRESENT
+              ? new Date(new Date(dateSnapshot).setHours(9, Math.floor(Math.random() * 15), 0, 0))
+              : undefined,
+            checkOutTime: status === AttendanceStatus.PRESENT
+              ? new Date(new Date(dateSnapshot).setHours(18, Math.floor(Math.random() * 15), 0, 0))
+              : undefined,
+            workHours: status === AttendanceStatus.PRESENT
+              ? new Decimal('8.5')
+              : status === AttendanceStatus.HALF_DAY
+              ? new Decimal('4.0')
+              : undefined,
+            isApproved: true,
+          },
+        });
+      }
+      current.setDate(current.getDate() + 1);
+    }
+  }
+
+  // ── 16c. Sample Site Complaints (2 per named site = 6 total) ─────────────────
+  console.log('Creating sample site complaints...');
+  const existingComplaintCount = await prisma.siteComplaint.count({ where: { tenantId: T } });
+  if (existingComplaintCount === 0) {
+    const complaintSamples = [
+      { siteId: siteGgn.id, reportedById: supGgn.id, category: 'SAFETY', severity: 'HIGH', title: 'Faulty electrical panel near Gate 3', description: 'The electrical panel at Gate 3 has exposed wiring and poses shock risk to workers. Immediate repair needed.', status: 'OPEN' },
+      { siteId: siteGgn.id, reportedById: supGgn.id, category: 'RESOURCE', severity: 'MEDIUM', title: 'Headcount shortage — 4 workers absent', description: 'Missing 4 security guards for night shift today. Need replacements urgently.', status: 'IN_REVIEW' },
+      { siteId: siteDel.id, reportedById: supDel.id, category: 'CLIENT_SITE', severity: 'MEDIUM', title: 'Client requesting scope expansion without amendment', description: 'DMRC site manager asking for additional 10 guards without a revised work order.', status: 'ESCALATED' },
+      { siteId: siteDel.id, reportedById: supDel.id, category: 'LABOUR_HR', severity: 'HIGH', title: 'Worker misconduct — verbal harassment', description: 'Guard EMP-DEL-007 reported to have verbally abused a colleague. Witness statements available.', status: 'IN_REVIEW' },
+      { siteId: siteFbd.id, reportedById: supFbd.id, category: 'OPERATIONS', severity: 'CRITICAL', title: 'Crane breakdown halting operations', description: 'Primary crane broke down at 10:30 AM. Work stoppage affecting 12 workers. Repair ETA unknown.', status: 'OPEN' },
+      { siteId: siteFbd.id, reportedById: supFbd.id, category: 'COMPLIANCE', severity: 'HIGH', title: 'Labour license expiry in 7 days', description: 'Contractor labour license expires on 2026-06-26. Renewal documents not yet submitted.', status: 'ESCALATED' },
+    ];
+
+    for (const c of complaintSamples) {
+      await prisma.siteComplaint.create({
+        data: { tenantId: T, ...c } as any,
+      });
+    }
+  }
+
+  // ── 16d. Sample Activity Logs (last 7 days per named site = 21 total) ────────
+  console.log('Creating sample site activity logs...');
+  const supervisorSiteMap = [
+    { supervisorId: supGgn.id, siteId: siteGgn.id },
+    { supervisorId: supDel.id, siteId: siteDel.id },
+    { supervisorId: supFbd.id, siteId: siteFbd.id },
+  ];
+
+  for (const { supervisorId, siteId } of supervisorSiteMap) {
+    for (let daysAgo = 0; daysAgo < 7; daysAgo++) {
+      const logDate = new Date();
+      logDate.setDate(logDate.getDate() - daysAgo);
+      logDate.setHours(0, 0, 0, 0);
+      await prisma.siteActivityLog.upsert({
+        where: { tenantId_siteId_supervisorId_logDate: { tenantId: T, siteId, supervisorId, logDate } },
+        update: {},
+        create: {
+          tenantId: T,
+          siteId,
+          supervisorId,
+          logDate,
+          workDone: daysAgo === 0
+            ? 'Routine security patrol, access gate monitoring, visitor log updated'
+            : 'Perimeter inspection, shift handover completed, equipment check done',
+          headcount: 12 + (daysAgo % 3),
+          hasIncident: daysAgo === 2,
+          incidentType: daysAgo === 2 ? 'SAFETY' : null,
+          incidentDesc: daysAgo === 2 ? 'Minor slip injury near washroom area. First aid administered. Worker sent home.' : null,
+          photoUrls: [],
+        },
+      });
+    }
   }
 
   // ── 17. Leave Requests ──────────────────────────────────────────────────────
@@ -1665,19 +1946,23 @@ async function main() {
   console.log('\n✅ Seeding complete!');
   console.log('─────────────────────────────────────────────');
   console.log('Demo credentials:');
-  console.log('  Super Admin:     admin@workzen.in   / Admin@123!');
-  console.log('  HR Manager:      hr@workzen.in      / Admin@123!');
-  console.log('  Payroll Manager: payroll@workzen.in / Admin@123!');
-  console.log('  Finance Manager: finance@workzen.in / Admin@123!');
+  console.log('  Super Admin:     admin@workzen.in        / Admin@123!');
+  console.log('  HR Manager:      hr@workzen.in           / Admin@123!');
+  console.log('  Payroll Manager: payroll@workzen.in      / Admin@123!');
+  console.log('  Finance Manager: finance@workzen.in      / Admin@123!');
+  console.log('  Supervisor GGN:  supervisor.ggn@workzen.in / Supervisor@123');
+  console.log('  Supervisor DEL:  supervisor.del@workzen.in / Supervisor@123');
+  console.log('  Supervisor FBD:  supervisor.fbd@workzen.in / Supervisor@123');
   console.log('─────────────────────────────────────────────');
   console.log('Data seeded:');
   console.log('  ✓ 4 departments, 8 designations');
   console.log('  ✓ 5 clients (NHAI, DMRC, AAI, NDMC, GAIL)');
   console.log('  ✓ 5 tenders + 5 work orders');
-  console.log('  ✓ 5 sites + 3 shifts');
+  console.log('  ✓ 8 sites (5 original + 3 named: GGN, DEL, FBD) + 3 shifts');
   console.log('  ✓ 20 employees (5 PERMANENT office, 15 CONTRACT site) with bank details & salary structures');
-  console.log('  ✓ 15 active deployments');
-  console.log('  ✓ Attendance records (May 2026)');
+  console.log('  ✓ 45 site employees (15 per named site: GGN/DEL/FBD)');
+  console.log('  ✓ 15 active deployments (original) + 45 deployments (site employees)');
+  console.log('  ✓ Attendance records (May 2026 original + Apr–Jun 2026 for 45 site employees)');
   console.log('  ✓ Leave types + requests + balances');
   console.log('  ✓ 3 payroll runs: Apr 2026 (DISBURSED), May 2026 (APPROVED/PAID), Jun 2026 (PENDING_APPROVAL)');
   console.log('  ✓ 55 payslips total (20 per run × 3 - some missing for May)');
@@ -1694,6 +1979,9 @@ async function main() {
   console.log('  ✓ WO positions, fulfillments, milestones, invoices, payments, amendment');
   console.log('  ✓ 4 courier vendors + 5 dispatches + 5 receipts');
   console.log('  ✓ 7 visitors (1 blacklisted) + 8 visitor logs (2 still inside today)');
+  console.log('  ✓ 3 site supervisors (Vikram/Anita/Suresh) with SITE_SUPERVISOR role');
+  console.log('  ✓ 6 site complaints (2 per named site)');
+  console.log('  ✓ 21 activity logs (7 days × 3 supervisors)');
 }
 
 main()
