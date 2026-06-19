@@ -125,7 +125,12 @@ export class AuthService {
     const payload = { sub: user.id, tenantId: user.tenantId, email: user.email };
     const accessToken = this.jwt.sign(payload);
     const refreshToken = await this.createRefreshToken(user.id);
-    return { accessToken, refreshToken, userId: user.id, tenantId: user.tenantId };
+    const userRoles = await this.prisma.userRole.findMany({
+      where: { userId: user.id },
+      select: { role: { select: { name: true } } },
+    });
+    const roles = userRoles.map((r) => r.role.name);
+    return { accessToken, refreshToken, userId: user.id, tenantId: user.tenantId, roles };
   }
 
   private async createRefreshToken(userId: string) {

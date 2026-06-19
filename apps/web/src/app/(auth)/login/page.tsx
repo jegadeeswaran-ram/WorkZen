@@ -57,7 +57,7 @@ export default function LoginPage() {
         toast.info('Enter your 2FA code');
         return;
       }
-      setAuth(res.accessToken, res.refreshToken, res.userId, res.tenantId);
+      setAuth(res.accessToken, res.refreshToken, res.userId, res.tenantId, res.roles ?? []);
       router.push('/dashboard');
     } catch (err: unknown) {
       toast.error(
