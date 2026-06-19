@@ -33,6 +33,7 @@ import { OrganizationModule } from './organization/organization.module';
 import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { LogisticsModule } from './logistics/logistics.module';
 import { VisitorsModule } from './visitors/visitors.module';
+import { ComplaintsModule } from './complaints/complaints.module';
 
 @Module({
   imports: [
@@ -107,6 +108,7 @@ import { VisitorsModule } from './visitors/visitors.module';
     WorkOrdersModule,
     LogisticsModule,
     VisitorsModule,
+    ComplaintsModule,
   ],
 })
 export class AppModule {}
