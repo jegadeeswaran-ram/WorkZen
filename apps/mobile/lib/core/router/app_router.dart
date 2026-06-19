@@ -10,6 +10,9 @@ import '../../features/leave/screens/leave_screen.dart';
 import '../../features/payslip/screens/payslips_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/supervisor/screens/supervisor_dashboard_screen.dart';
+import '../../features/supervisor/screens/team_members_screen.dart';
+import '../../features/supervisor/screens/leave_approvals_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Listens to auth state changes and notifies GoRouter to re-run redirect.
@@ -53,6 +56,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/leave', builder: (_, __) => const LeaveScreen()),
           GoRoute(path: '/payslips', builder: (_, __) => const PayslipsScreen()),
           GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+          GoRoute(path: '/supervisor/dashboard', builder: (_, __) => const SupervisorDashboardScreen()),
+          GoRoute(path: '/supervisor/team', builder: (_, __) => const TeamMembersScreen()),
+          GoRoute(path: '/supervisor/approvals', builder: (_, __) => const LeaveApprovalsScreen()),
         ],
       ),
       GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),
