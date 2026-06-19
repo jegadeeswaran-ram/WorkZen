@@ -62,8 +62,9 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
   Color _statusColor(String? status) {
     switch ((status ?? '').toUpperCase()) {
       case 'PRESENT':
-      case 'LATE':
         return AppTheme.success;
+      case 'LATE':
+        return AppTheme.warning;
       case 'LEAVE':
       case 'HALF_DAY':
         return AppTheme.warning;
@@ -109,7 +110,6 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
       builder: (_) => _MarkSheet(
         employee: employee,
         currentStatus: currentStatus,
-        ref: ref,
       ),
     );
   }
@@ -302,6 +302,7 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh',
             onPressed: () {
+              ref.invalidate(supervisorTeamProvider);
               ref.invalidate(teamTodayAttendanceProvider);
             },
           ),
@@ -316,11 +317,6 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
               onRefresh: () async {
                 ref.invalidate(supervisorTeamProvider);
                 ref.invalidate(teamTodayAttendanceProvider);
-                // Wait for both to settle
-                await Future.wait([
-                  ref.read(supervisorTeamProvider.future),
-                  ref.read(teamTodayAttendanceProvider.future),
-                ]).catchError((_) => <List<Map<String, dynamic>>>[]);
               },
               child: isLoading
                   ? const Center(
@@ -374,22 +370,20 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
 // Mark Attendance Bottom Sheet
 // ---------------------------------------------------------------------------
 
-class _MarkSheet extends StatefulWidget {
+class _MarkSheet extends ConsumerStatefulWidget {
   final Map<String, dynamic> employee;
   final String? currentStatus;
-  final WidgetRef ref;
 
   const _MarkSheet({
     required this.employee,
     required this.currentStatus,
-    required this.ref,
   });
 
   @override
-  State<_MarkSheet> createState() => _MarkSheetState();
+  ConsumerState<_MarkSheet> createState() => _MarkSheetState();
 }
 
-class _MarkSheetState extends State<_MarkSheet> {
+class _MarkSheetState extends ConsumerState<_MarkSheet> {
   late String _selectedStatus;
   final TextEditingController _remarksCtrl = TextEditingController();
   bool _loading = false;
@@ -429,7 +423,7 @@ class _MarkSheetState extends State<_MarkSheet> {
   Future<void> _submit() async {
     setState(() => _loading = true);
     try {
-      final api = widget.ref.read(apiClientProvider);
+      final api = ref.read(apiClientProvider);
       final now = DateTime.now();
       final date =
           '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
@@ -441,7 +435,7 @@ class _MarkSheetState extends State<_MarkSheet> {
         if (_remarksCtrl.text.isNotEmpty)
           'remarks': _remarksCtrl.text.trim(),
       });
-      widget.ref.invalidate(teamTodayAttendanceProvider);
+      ref.invalidate(teamTodayAttendanceProvider);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
