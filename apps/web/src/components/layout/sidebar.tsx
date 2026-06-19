@@ -142,6 +142,7 @@ export function Sidebar() {
   // Helper function to check if user has required roles
   const hasRequiredRole = (requiredRoles?: string[]): boolean => {
     if (!requiredRoles || requiredRoles.length === 0) return true;
+    if (roles.includes('SUPER_ADMIN') || roles.includes('COMPANY_OWNER')) return true;
     return requiredRoles.some((role) => roles.includes(role));
   };
 
