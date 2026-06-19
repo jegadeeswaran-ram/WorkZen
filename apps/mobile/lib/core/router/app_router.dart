@@ -43,7 +43,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isLoading && path == '/splash') return null;
 
       if (!isLoggedIn && !isAuthRoute) return '/login';
-      if (isLoggedIn && isAuthRoute) return '/home';
+      if (isLoggedIn && isAuthRoute) {
+        final role = authState.value?.role ?? '';
+        return role == 'SITE_SUPERVISOR' ? '/supervisor/dashboard' : '/home';
+      }
       return null;
     },
     routes: [
