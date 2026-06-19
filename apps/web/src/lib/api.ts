@@ -612,3 +612,41 @@ export const visitorsApi = {
   checkIn: (data: Record<string, unknown>) => api.post('/visitors/check-in', data).then((r) => r.data.data),
   checkOut: (logId: string) => api.patch(`/visitors/logs/${logId}/check-out`, {}).then((r) => r.data.data),
 };
+
+// ── Supervisor — Shared Types ────────────────────────────────────────
+export interface ResponseDto<T> { success: boolean; data: T; message?: string }
+export interface SiteComplaint {
+  id: string; tenantId: string; siteId: string; category: string; severity: string;
+  status: string; title: string; description: string; attachments: string[];
+  reportedById: string; resolvedAt: string | null; resolutionNote: string | null;
+  createdAt: string; site?: { id: string; name: string; code: string };
+  reportedBy?: { id: string; firstName: string; lastName: string };
+}
+export interface SiteActivityLog {
+  id: string; siteId: string; supervisorId: string; logDate: string;
+  workDone: string; headcount: number; hasIncident: boolean;
+  incidentType: string | null; incidentDesc: string | null; photoUrls: string[];
+  createdAt: string;
+}
+export type CreateComplaintPayload = { siteId: string; category: string; severity?: string; title: string; description: string; assignedToId?: string; attachments?: string[] };
+export type ActivityLogPayload = { siteId: string; logDate?: string; workDone: string; headcount: number; hasIncident?: boolean; incidentType?: string; incidentDesc?: string; photoUrls?: string[] };
+
+// ── Supervisor — Complaints ──────────────────────────────────────────
+export const complaintsApi = {
+  list: (siteId?: string) => api.get<ResponseDto<SiteComplaint[]>>(`/complaints${siteId ? `?siteId=${siteId}` : ''}`),
+  get: (id: string) => api.get<ResponseDto<SiteComplaint>>(`/complaints/${id}`),
+  create: (data: CreateComplaintPayload) => api.post<ResponseDto<SiteComplaint>>('/complaints', data),
+  update: (id: string, data: Partial<CreateComplaintPayload> & { status?: string }) => api.patch<ResponseDto<SiteComplaint>>(`/complaints/${id}`, data),
+  delete: (id: string) => api.delete(`/complaints/${id}`),
+};
+
+// ── Supervisor — Activity Log ────────────────────────────────────────
+export const activityLogApi = {
+  list: (siteId: string, startDate?: string, endDate?: string) => api.get<ResponseDto<SiteActivityLog[]>>(`/activity-log?siteId=${siteId}${startDate ? `&startDate=${startDate}` : ''}${endDate ? `&endDate=${endDate}` : ''}`),
+  today: (siteId: string) => api.get<ResponseDto<SiteActivityLog | null>>(`/activity-log/today?siteId=${siteId}`),
+  save: (data: ActivityLogPayload) => api.post<ResponseDto<SiteActivityLog>>('/activity-log', data),
+  uploadPhoto: (file: File, siteId: string) => {
+    const fd = new FormData(); fd.append('photo', file);
+    return api.post<ResponseDto<{ url: string }>>('/activity-log/upload-photo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+};
