@@ -13,6 +13,7 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/supervisor/screens/supervisor_dashboard_screen.dart';
 import '../../features/supervisor/screens/team_members_screen.dart';
 import '../../features/supervisor/screens/leave_approvals_screen.dart';
+import '../../features/supervisor/screens/team_attendance_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Listens to auth state changes and notifies GoRouter to re-run redirect.
@@ -59,6 +60,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/supervisor/dashboard', builder: (_, __) => const SupervisorDashboardScreen()),
           GoRoute(path: '/supervisor/team', builder: (_, __) => const TeamMembersScreen()),
           GoRoute(path: '/supervisor/approvals', builder: (_, __) => const LeaveApprovalsScreen()),
+          GoRoute(path: '/supervisor/team-attendance', builder: (_, __) => const TeamAttendanceScreen()),
         ],
       ),
       GoRoute(path: '/notifications', builder: (_, __) => const NotificationsScreen()),

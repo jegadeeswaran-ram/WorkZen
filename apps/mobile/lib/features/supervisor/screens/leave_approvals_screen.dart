@@ -275,7 +275,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: AppTheme.primary.withOpacity(0.15),
+                backgroundColor: AppTheme.primary.withValues(alpha: 0.15),
                 child: Text(
                   initials,
                   style: const TextStyle(
@@ -309,9 +309,9 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: statusColor.withOpacity(0.35)),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.35)),
                 ),
                 child: Text(
                   status,
@@ -376,7 +376,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                       onPressed: () => _handleAction('APPROVED'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.success,
-                        side: BorderSide(color: AppTheme.success.withOpacity(0.5)),
+                        side: BorderSide(color: AppTheme.success.withValues(alpha: 0.5)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -394,7 +394,7 @@ class _LeaveRequestCardState extends ConsumerState<_LeaveRequestCard> {
                       onPressed: () => _handleAction('REJECTED'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.danger,
-                        side: BorderSide(color: AppTheme.danger.withOpacity(0.5)),
+                        side: BorderSide(color: AppTheme.danger.withValues(alpha: 0.5)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

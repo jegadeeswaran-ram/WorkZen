@@ -95,7 +95,7 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                       label: 'Mark\nAttendance',
                       icon: Icons.how_to_reg,
                       color: AppTheme.primary,
-                      onTap: () => context.go('/supervisor/team'),
+                      onTap: () => context.go('/supervisor/team-attendance'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -342,9 +342,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -385,9 +385,9 @@ class _StatsError extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.danger.withOpacity(0.08),
+        color: AppTheme.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.danger.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.danger.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -433,9 +433,9 @@ class _ActionCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -443,7 +443,7 @@ class _ActionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 22),
@@ -486,9 +486,9 @@ class _SectionTitle extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.warning.withOpacity(0.15),
+              color: AppTheme.warning.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.warning.withOpacity(0.4)),
+              border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
             ),
             child: Text(
               '$count',
@@ -556,9 +556,9 @@ class _ApprovalItem extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.warning.withOpacity(0.12),
+              color: AppTheme.warning.withValues(alpha: 0.12),
               shape: BoxShape.circle,
-              border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+              border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
             ),
             child: Center(
               child: Text(
@@ -608,9 +608,9 @@ class _ApprovalItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.12),
+                color: AppTheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppTheme.primary.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 '$days d',
@@ -666,9 +666,9 @@ class _ApprovalsError extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.danger.withOpacity(0.08),
+        color: AppTheme.danger.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.danger.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.danger.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
