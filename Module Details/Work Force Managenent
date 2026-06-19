@@ -1,0 +1,893 @@
+
+
+You are a Principal HRMS Architect, Workforce Management Consultant, Labour Law Expert, Government Tender Operations Specialist, Payroll Consultant, Enterprise ERP Architect, Product Manager, Database Architect, UI/UX Designer, and Senior Full Stack Engineer.
+
+Design and build a complete Enterprise HRMS Module for a Government Tender Manpower ERP System.
+
+This ERP serves manpower contractors handling:
+
+- Government Departments
+- PSU Contracts
+- Security Services
+- Housekeeping Contracts
+- Facility Management
+- Drivers
+- Data Entry Operators
+- Skilled Labour
+- Technical Staff
+- Contract Labour
+
+The module must support 100,000+ employees, multi-company, multi-branch, multi-location, and multi-tender deployment.
+
+=================================================
+TECH STACK
+=================================================
+
+Frontend:
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- ShadCN UI
+- TanStack Table
+- React Query
+
+Backend:
+- NestJS
+- PostgreSQL
+- Prisma ORM
+- Redis
+- BullMQ
+
+Mobile:
+- Flutter
+- Riverpod
+- Offline Sync
+
+Architecture:
+- Multi Tenant SaaS
+- Event Driven
+- Microservice Ready
+
+=================================================
+MODULES - Workforce Management
+=================================================
+
+1. Employee Management
+2. Organization Structure
+3. Attendance Management
+4. Leave Management
+
+=================================================
+MODULE 1
+EMPLOYEE MANAGEMENT
+=================================================
+
+MAIN MENU
+
+Employees
+
+SUB MENUS
+
+Employee Dashboard
+
+Employee Directory
+
+Employee Master
+
+Employee Onboarding
+
+Employee Documents
+
+Employee Bank Details
+
+Employee Government IDs
+
+Employee Salary Structure
+
+Employee Deployment
+
+Employee Transfer
+
+Employee Promotion
+
+Employee Separation
+
+Employee Exit Management
+
+Employee Assets
+
+Employee History
+
+Employee Reports
+
+-------------------------------------------------
+
+EMPLOYEE MASTER
+
+Personal Details
+
+Employee Code Auto Generation
+
+Employee Name
+
+Photo
+
+Gender
+
+Date Of Birth
+
+Blood Group
+
+Marital Status
+
+Nationality
+
+Mobile Number
+
+Email
+
+Current Address
+
+Permanent Address
+
+Emergency Contact
+
+-------------------------------------------------
+
+GOVERNMENT DOCUMENTS
+
+Aadhaar
+
+PAN
+
+UAN
+
+ESIC Number
+
+Driving License
+
+Passport
+
+Voter ID
+
+Police Verification
+
+Background Verification
+
+-------------------------------------------------
+
+EMPLOYMENT DETAILS
+
+Employee Type
+
+Permanent
+
+Contract
+
+Temporary
+
+Trainee
+
+Apprentice
+
+Designation
+
+Department
+
+Branch
+
+Reporting Manager
+
+Joining Date
+
+Confirmation Date
+
+Exit Date
+
+Employee Status
+
+-------------------------------------------------
+
+BANK DETAILS
+
+Account Number
+
+IFSC Code
+
+Bank Name
+
+Branch
+
+UPI ID
+
+Salary Transfer Status
+
+-------------------------------------------------
+
+DOCUMENT MANAGEMENT
+
+Upload Documents
+
+Document Expiry Alerts
+
+Document Versioning
+
+Document Verification Workflow
+
+-------------------------------------------------
+
+EMPLOYEE DEPLOYMENT
+
+Assign Employee To:
+
+Tender
+
+Contract
+
+Department
+
+Site
+
+Shift
+
+Supervisor
+
+Transfer Workflow
+
+Replacement Workflow
+
+-------------------------------------------------
+
+EMPLOYEE LIFECYCLE
+
+Candidate
+
+Selected
+
+Joined
+
+Training
+
+Deployed
+
+Transferred
+
+Promoted
+
+Exited
+
+Archived
+
+=================================================
+MODULE 2
+ORGANIZATION STRUCTURE
+=================================================
+
+MAIN MENU
+
+Organization Structure
+
+SUB MENUS
+
+Branches
+
+Departments
+
+Designations
+
+Reporting Structure
+
+Locations
+
+Regions
+
+Zones
+
+Holidays
+
+Announcements
+
+Award Types
+
+Document Types
+
+-------------------------------------------------
+
+BRANCH MANAGEMENT
+
+Branch Code
+
+Branch Name
+
+GST Number
+
+PAN
+
+Address
+
+Contact Details
+
+Regional Mapping
+
+Branch Manager
+
+-------------------------------------------------
+
+DEPARTMENT MANAGEMENT
+
+Operations
+
+HR
+
+Accounts
+
+Payroll
+
+Compliance
+
+Administration
+
+Recruitment
+
+Training
+
+Custom Departments
+
+-------------------------------------------------
+
+DESIGNATION MANAGEMENT
+
+Security Guard
+
+Supervisor
+
+Field Officer
+
+Driver
+
+Housekeeping Staff
+
+Manager
+
+Custom Designations
+
+Designation Hierarchy
+
+-------------------------------------------------
+
+HOLIDAY MANAGEMENT
+
+National Holidays
+
+State Holidays
+
+Company Holidays
+
+Optional Holidays
+
+Tender Specific Holidays
+
+Location Wise Holidays
+
+Holiday Calendar
+
+Holiday Approval
+
+-------------------------------------------------
+
+ANNOUNCEMENTS
+
+Company News
+
+HR Circulars
+
+Policy Updates
+
+Contract Notifications
+
+Emergency Alerts
+
+Notice Board
+
+Mobile Notifications
+
+-------------------------------------------------
+
+AWARD TYPES
+
+Employee Of The Month
+
+Best Attendance
+
+Best Performer
+
+Long Service Award
+
+Safety Award
+
+Custom Awards
+
+-------------------------------------------------
+
+DOCUMENT TYPES
+
+Employee Documents
+
+Contract Documents
+
+Compliance Documents
+
+Tender Documents
+
+Client Documents
+
+Policy Documents
+
+=================================================
+MODULE 3
+ATTENDANCE MANAGEMENT
+=================================================
+
+MAIN MENU
+
+Attendance
+
+SUB MENUS
+
+Attendance Dashboard
+
+Attendance Records
+
+Timesheet
+
+Biometric Attendance
+
+Attendance Regularization
+
+Shifts
+
+Attendance Policies
+
+Geo Fence Management
+
+Attendance Approval
+
+Attendance Analytics
+
+Attendance Reports
+
+-------------------------------------------------
+
+ATTENDANCE RECORDS
+
+Daily Attendance
+
+Monthly Attendance
+
+Manual Attendance
+
+Bulk Attendance
+
+Attendance Import
+
+Attendance Export
+
+Attendance History
+
+Attendance Audit Trail
+
+-------------------------------------------------
+
+TIMESHEET MANAGEMENT
+
+Daily Timesheet
+
+Weekly Timesheet
+
+Monthly Timesheet
+
+Project Timesheet
+
+Tender Timesheet
+
+Task Timesheet
+
+Approval Workflow
+
+Timesheet Reports
+
+-------------------------------------------------
+
+BIOMETRIC ATTENDANCE
+
+eSSL Integration
+
+ZKTeco Integration
+
+Matrix Integration
+
+Suprema Integration
+
+Device Mapping
+
+Punch Logs
+
+Device Health Monitoring
+
+Sync Status
+
+Missing Punch Reports
+
+-------------------------------------------------
+
+ATTENDANCE REGULARIZATION
+
+Missing Punch Request
+
+Late Mark Correction
+
+Wrong Shift Correction
+
+Wrong Site Correction
+
+Attendance Dispute
+
+Approval Workflow
+
+Audit History
+
+-------------------------------------------------
+
+SHIFT MANAGEMENT
+
+Shift Master
+
+Shift Rotation
+
+Shift Calendar
+
+Night Shift
+
+Double Shift
+
+Split Shift
+
+Weekly Off Rules
+
+Roster Planning
+
+-------------------------------------------------
+
+ATTENDANCE POLICIES
+
+Late Rules
+
+Grace Time Rules
+
+Half Day Rules
+
+Absent Rules
+
+Holiday Rules
+
+Weekly Off Rules
+
+Overtime Rules
+
+Night Shift Rules
+
+Attendance Penalty Rules
+
+Loss Of Pay Rules
+
+=================================================
+MODULE 4
+LEAVE MANAGEMENT
+=================================================
+
+MAIN MENU
+
+Leave Management
+
+SUB MENUS
+
+Leave Dashboard
+
+Leave Applications
+
+Leave Balances
+
+Leave Types
+
+Leave Policies
+
+Leave Approval
+
+Leave Calendar
+
+Compensatory Off
+
+Holiday Calendar
+
+Leave Reports
+
+-------------------------------------------------
+
+LEAVE APPLICATIONS
+
+Apply Leave
+
+Edit Leave
+
+Cancel Leave
+
+Leave History
+
+Bulk Leave Upload
+
+Emergency Leave
+
+Half Day Leave
+
+-------------------------------------------------
+
+LEAVE BALANCES
+
+Opening Balance
+
+Accrued Leave
+
+Used Leave
+
+Pending Leave
+
+Available Leave
+
+Carry Forward
+
+Encashment Balance
+
+-------------------------------------------------
+
+LEAVE TYPES
+
+Casual Leave
+
+Sick Leave
+
+Earned Leave
+
+Maternity Leave
+
+Paternity Leave
+
+Compensatory Off
+
+Loss Of Pay
+
+Optional Holiday
+
+Special Leave
+
+Custom Leave Types
+
+-------------------------------------------------
+
+LEAVE POLICIES
+
+Eligibility Rules
+
+Accrual Rules
+
+Carry Forward Rules
+
+Encashment Rules
+
+Sandwich Rules
+
+Notice Period Rules
+
+Probation Rules
+
+Contract Employee Rules
+
+Tender Specific Rules
+
+-------------------------------------------------
+
+LEAVE APPROVAL WORKFLOW
+
+Employee
+↓
+Supervisor
+↓
+HR
+↓
+Approved
+
+Multi-Level Approval Matrix
+
+Escalation Rules
+
+Auto Approval Rules
+
+-------------------------------------------------
+
+LEAVE CALENDAR
+
+Team Leave Calendar
+
+Department Calendar
+
+Branch Calendar
+
+Holiday Calendar
+
+Conflict Detection
+
+Resource Planning
+
+=================================================
+WORKFLOWS
+=================================================
+
+WORKFLOW 1
+
+Employee Joining
+↓
+Document Verification
+↓
+Department Assignment
+↓
+Designation Assignment
+↓
+Deployment
+↓
+Attendance
+↓
+Payroll
+
+WORKFLOW 2
+
+Attendance
+↓
+Attendance Approval
+↓
+Payroll Calculation
+↓
+Billing Calculation
+
+WORKFLOW 3
+
+Leave Application
+↓
+Supervisor Approval
+↓
+HR Approval
+↓
+Attendance Update
+↓
+Payroll Update
+
+=================================================
+DATABASE DESIGN
+=================================================
+
+Generate:
+
+PostgreSQL Schema
+
+ER Diagram
+
+Prisma Models
+
+Indexes
+
+Relationships
+
+Constraints
+
+Audit Tables
+
+History Tables
+
+=================================================
+API DEVELOPMENT
+=================================================
+
+Generate:
+
+REST APIs
+
+GraphQL APIs
+
+Swagger Documentation
+
+Pagination
+
+Filtering
+
+Search
+
+Bulk Operations
+
+Import Export APIs
+
+=================================================
+RBAC
+=================================================
+
+Roles:
+
+Super Admin
+
+Company Owner
+
+HR Manager
+
+Operations Manager
+
+Payroll Manager
+
+Compliance Manager
+
+Branch Manager
+
+Supervisor
+
+Employee
+
+Client User
+
+Generate detailed permission matrix.
+
+=================================================
+MOBILE APP
+=================================================
+
+Employee App
+
+Attendance
+
+Leave
+
+Profile
+
+Documents
+
+Notifications
+
+Timesheets
+
+Supervisor App
+
+Attendance Approval
+
+Leave Approval
+
+Employee Tracking
+
+Deployment Monitoring
+
+=================================================
+OUTPUT REQUIRED
+=================================================
+
+Generate:
+
+1. Complete Information Architecture
+2. Menu/Submenu Structure
+3. Database Schema
+4. Prisma Models
+5. NestJS Module Structure
+6. API Endpoints
+7. Screen Wireframes
+8. Workflow Diagrams
+9. Approval Matrix
+10. Attendance Engine Design
+11. Leave Engine Design
+12. Mobile App Structure
+13. Audit Framework
+14. Production Folder Structure
+
+Build this as an enterprise-grade HRMS module specialized for Government Tender Manpower Contractors with deep attendance, leave, deployment, compliance, payroll, and billing integration.

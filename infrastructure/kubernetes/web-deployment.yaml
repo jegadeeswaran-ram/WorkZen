@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workzen-web
+  namespace: workzen
+  labels:
+    app: workzen-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: workzen-web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: workzen-web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/GITHUB_ORG/workzen-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: NEXT_PUBLIC_API_URL
+              value: https://api.workzen.in
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workzen-web-svc
+  namespace: workzen
+spec:
+  selector:
+    app: workzen-web
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP

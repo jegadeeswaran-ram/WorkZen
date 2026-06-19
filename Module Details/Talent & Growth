@@ -1,0 +1,1116 @@
+You are a Principal HRMS Architect, Talent Management Consultant, Government Contract Workforce Specialist, Enterprise Product Architect, Training Consultant, Recruitment Expert, Performance Management Consultant, Database Architect, UI/UX Designer, and Senior Full Stack Engineer.
+
+Design and build a complete Enterprise Talent & Growth Module for a Government Tender Manpower ERP System.
+
+This ERP serves:
+
+- Government Tender Contractors
+- Security Agencies
+- Facility Management Companies
+- Housekeeping Companies
+- Contract Labour Providers
+- Industrial Workforce Suppliers
+- Driver Supply Agencies
+- Skilled & Semi-Skilled Labour Contractors
+
+The Talent & Growth module must manage the complete employee journey from recruitment to retirement while supporting 100,000+ employees across multiple government contracts.
+
+====================================================
+TECHNOLOGY STACK
+====================================================
+
+Frontend:
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- ShadCN UI
+- React Query
+- TanStack Table
+
+Backend:
+- NestJS
+- PostgreSQL
+- Prisma ORM
+- Redis
+- BullMQ
+
+Mobile:
+- Flutter
+- Riverpod
+
+Architecture:
+- Multi-Tenant SaaS
+- Event Driven Architecture
+- Workflow Engine
+- Audit Logging
+
+====================================================
+MODULES
+====================================================
+
+1. Recruitment
+2. Employee Lifecycle
+3. Performance Management
+4. Training & Development
+
+====================================================
+MODULE 1
+RECRUITMENT
+====================================================
+
+MAIN MENU
+
+Talent & Growth
+   └── Recruitment
+
+====================================================
+SUB MENUS
+====================================================
+
+Recruitment Dashboard
+
+Job Postings
+
+Candidates
+
+Candidate Pipeline
+
+Candidate Assessments
+
+Interviews
+
+Interview Feedback
+
+Offer Letters
+
+Candidate Onboarding
+
+Onboarding Checklists
+
+Checklist Items
+
+Job Categories
+
+Job Types
+
+Job Locations
+
+Candidate Sources
+
+Interview Types
+
+Interview Rounds
+
+Offer Templates
+
+Recruitment Reports
+
+Recruitment Analytics
+
+====================================================
+RECRUITMENT DASHBOARD
+====================================================
+
+KPI Cards
+
+Open Positions
+
+Candidates Applied
+
+Candidates Shortlisted
+
+Interviews Scheduled
+
+Offers Released
+
+Offers Accepted
+
+Candidates Joined
+
+Offer Rejection %
+
+Recruitment Cost
+
+Average Hiring Time
+
+Vacancy Count
+
+Deployment Pending
+
+====================================================
+JOB POSTINGS
+====================================================
+
+Fields
+
+Job Code
+
+Job Title
+
+Job Category
+
+Department
+
+Branch
+
+Tender
+
+Contract
+
+Site
+
+Required Headcount
+
+Job Description
+
+Responsibilities
+
+Qualifications
+
+Experience
+
+Salary Range
+
+Gender Requirement
+
+Age Limit
+
+Posting Date
+
+Closing Date
+
+Hiring Manager
+
+Status
+
+Work Location
+
+Skills Required
+
+Priority
+
+Approval Workflow
+
+Features
+
+Internal Job Posting
+
+External Job Posting
+
+Bulk Recruitment
+
+Mass Hiring Campaign
+
+Tender Specific Recruitment
+
+Auto Publish
+
+Job Expiry Alerts
+
+====================================================
+CANDIDATES
+====================================================
+
+Candidate Master
+
+Personal Details
+
+Address
+
+Education
+
+Experience
+
+Skills
+
+Certificates
+
+Photo
+
+Resume
+
+Government IDs
+
+Aadhaar
+
+PAN
+
+Driving License
+
+Police Verification
+
+Background Verification
+
+Current Salary
+
+Expected Salary
+
+Notice Period
+
+Status
+
+Source
+
+Features
+
+Resume Parsing
+
+Duplicate Detection
+
+Talent Pool
+
+Blacklist Candidates
+
+Candidate History
+
+====================================================
+CANDIDATE SOURCES
+====================================================
+
+Walk-In
+
+Employee Referral
+
+Consultant
+
+Recruitment Agency
+
+Job Portal
+
+Social Media
+
+Campus Recruitment
+
+Vendor
+
+Government Employment Exchange
+
+====================================================
+INTERVIEWS
+====================================================
+
+Schedule Interview
+
+Interview Calendar
+
+Panel Assignment
+
+Candidate Communication
+
+Interview Reminders
+
+Online Interviews
+
+Offline Interviews
+
+====================================================
+INTERVIEW TYPES
+====================================================
+
+HR Interview
+
+Technical Interview
+
+Manager Interview
+
+Client Interview
+
+Field Assessment
+
+Site Assessment
+
+Document Verification
+
+Medical Test
+
+====================================================
+INTERVIEW ROUNDS
+====================================================
+
+Round 1 Screening
+
+Round 2 Technical
+
+Round 3 Client
+
+Round 4 Final HR
+
+Round 5 Offer Approval
+
+====================================================
+INTERVIEW FEEDBACK
+====================================================
+
+Evaluation Form
+
+Skills Rating
+
+Communication Rating
+
+Behaviour Rating
+
+Experience Rating
+
+Overall Rating
+
+Selection Recommendation
+
+Remarks
+
+Approval Workflow
+
+====================================================
+CANDIDATE ASSESSMENTS
+====================================================
+
+Online Tests
+
+Physical Tests
+
+Security Guard Fitness Test
+
+Driving Test
+
+Technical Assessment
+
+Compliance Assessment
+
+Language Assessment
+
+Document Verification Score
+
+====================================================
+OFFER LETTER
+====================================================
+
+Offer Templates
+
+Salary Structure
+
+Benefits
+
+Deployment Details
+
+Joining Date
+
+Approval Workflow
+
+Digital Acceptance
+
+E-Signature
+
+Offer Expiry
+
+====================================================
+CANDIDATE ONBOARDING
+====================================================
+
+Joining Kit
+
+Document Collection
+
+Employee Creation
+
+Asset Allocation
+
+Training Assignment
+
+Tender Deployment
+
+Payroll Setup
+
+Attendance Setup
+
+====================================================
+ONBOARDING CHECKLISTS
+====================================================
+
+Document Submission
+
+Bank Account Verification
+
+PF Registration
+
+ESI Registration
+
+Uniform Issue
+
+ID Card Issue
+
+Training Completion
+
+Deployment Approval
+
+====================================================
+MODULE 2
+EMPLOYEE LIFECYCLE
+====================================================
+
+MAIN MENU
+
+Talent & Growth
+   └── Employee Lifecycle
+
+====================================================
+SUB MENUS
+====================================================
+
+Lifecycle Dashboard
+
+Awards
+
+Promotions
+
+Transfers
+
+Warnings
+
+Resignations
+
+Terminations
+
+Trips
+
+Employee History
+
+Lifecycle Reports
+
+====================================================
+AWARDS
+====================================================
+
+Award Categories
+
+Employee Of Month
+
+Best Attendance
+
+Best Performer
+
+Long Service Award
+
+Safety Award
+
+Client Appreciation Award
+
+Cash Rewards
+
+Certificates
+
+Approval Workflow
+
+====================================================
+PROMOTIONS
+====================================================
+
+Promotion Requests
+
+Promotion Criteria
+
+Grade Changes
+
+Salary Revisions
+
+Position Changes
+
+Approval Workflow
+
+Promotion History
+
+====================================================
+TRANSFERS
+====================================================
+
+Branch Transfer
+
+Department Transfer
+
+Site Transfer
+
+Tender Transfer
+
+Shift Transfer
+
+Location Transfer
+
+Replacement Planning
+
+Transfer History
+
+====================================================
+WARNINGS
+====================================================
+
+Verbal Warning
+
+Written Warning
+
+Attendance Violation
+
+Disciplinary Action
+
+Misconduct Reports
+
+Client Complaints
+
+Escalation Matrix
+
+Warning History
+
+====================================================
+RESIGNATIONS
+====================================================
+
+Resignation Request
+
+Notice Period
+
+Exit Approval
+
+Asset Recovery
+
+Knowledge Transfer
+
+Final Settlement
+
+Exit Interview
+
+Relieving Letter
+
+Experience Certificate
+
+====================================================
+TERMINATIONS
+====================================================
+
+Disciplinary Termination
+
+Contract Closure
+
+Performance Issues
+
+Client Request
+
+Blacklisting
+
+Settlement Processing
+
+Legal Documentation
+
+====================================================
+TRIPS
+====================================================
+
+Employee Travel Request
+
+Tender Site Visits
+
+Inspection Visits
+
+Training Travel
+
+Travel Advance
+
+Travel Expenses
+
+Travel Settlement
+
+Trip Reports
+
+====================================================
+MODULE 3
+PERFORMANCE MANAGEMENT
+====================================================
+
+MAIN MENU
+
+Talent & Growth
+   └── Performance Management
+
+====================================================
+SUB MENUS
+====================================================
+
+Performance Dashboard
+
+Employee Reviews
+
+Employee Goals
+
+Review Cycles
+
+Indicators
+
+Goal Types
+
+Indicator Categories
+
+Performance Reports
+
+Performance Analytics
+
+====================================================
+EMPLOYEE REVIEWS
+====================================================
+
+Self Assessment
+
+Manager Assessment
+
+HR Assessment
+
+Client Feedback
+
+360 Degree Feedback
+
+Review History
+
+Performance Ratings
+
+Review Approval Workflow
+
+====================================================
+REVIEW CYCLES
+====================================================
+
+Monthly
+
+Quarterly
+
+Half-Yearly
+
+Annual
+
+Probation Review
+
+Contract Review
+
+Tender Review
+
+====================================================
+EMPLOYEE GOALS
+====================================================
+
+Individual Goals
+
+Department Goals
+
+Tender Goals
+
+Site Goals
+
+Client Goals
+
+Compliance Goals
+
+Attendance Goals
+
+Productivity Goals
+
+====================================================
+GOAL TYPES
+====================================================
+
+Performance Goal
+
+Attendance Goal
+
+Quality Goal
+
+Revenue Goal
+
+Cost Reduction Goal
+
+Compliance Goal
+
+Safety Goal
+
+Training Goal
+
+====================================================
+INDICATORS
+====================================================
+
+Attendance %
+
+Punctuality
+
+Productivity
+
+Client Satisfaction
+
+Training Score
+
+Compliance Score
+
+Disciplinary Score
+
+Replacement Rate
+
+====================================================
+INDICATOR CATEGORIES
+====================================================
+
+Productivity
+
+Attendance
+
+Quality
+
+Compliance
+
+Behaviour
+
+Safety
+
+Training
+
+Leadership
+
+====================================================
+PERFORMANCE ANALYTICS
+====================================================
+
+Top Performers
+
+Low Performers
+
+Promotion Readiness
+
+Succession Planning
+
+Talent Matrix
+
+Performance Trends
+
+Client Feedback Analysis
+
+====================================================
+MODULE 4
+TRAINING & DEVELOPMENT
+====================================================
+
+MAIN MENU
+
+Talent & Growth
+   └── Training & Development
+
+====================================================
+SUB MENUS
+====================================================
+
+Training Dashboard
+
+Employee Trainings
+
+Training Sessions
+
+Training Programs
+
+Training Assessments
+
+Training Types
+
+Training Calendar
+
+Trainers
+
+Training Certificates
+
+Training Reports
+
+Training Analytics
+
+====================================================
+EMPLOYEE TRAININGS
+====================================================
+
+Assigned Training
+
+Completed Training
+
+Pending Training
+
+Mandatory Training
+
+Refresher Training
+
+Certification Status
+
+====================================================
+TRAINING PROGRAMS
+====================================================
+
+Induction Program
+
+Security Guard Training
+
+Housekeeping Training
+
+Safety Training
+
+Fire Safety Training
+
+First Aid Training
+
+Soft Skills Training
+
+Leadership Program
+
+Supervisor Program
+
+Manager Program
+
+Client Specific Training
+
+Tender Specific Training
+
+====================================================
+TRAINING SESSIONS
+====================================================
+
+Classroom Training
+
+Online Training
+
+Site Training
+
+Practical Training
+
+Assessment Session
+
+Attendance Tracking
+
+Trainer Feedback
+
+====================================================
+TRAINING TYPES
+====================================================
+
+Mandatory
+
+Compliance
+
+Technical
+
+Safety
+
+Soft Skills
+
+Leadership
+
+Refresher
+
+Certification
+
+====================================================
+TRAINING ASSESSMENTS
+====================================================
+
+Quiz
+
+Written Test
+
+Practical Test
+
+Physical Test
+
+Site Evaluation
+
+Trainer Evaluation
+
+Pass/Fail Criteria
+
+Scoring Matrix
+
+====================================================
+TRAINING CERTIFICATES
+====================================================
+
+Certificate Templates
+
+Certificate Generation
+
+Renewal Tracking
+
+Expiry Alerts
+
+Verification QR Code
+
+====================================================
+WORKFLOWS
+====================================================
+
+Recruitment Workflow
+
+Job Posting
+↓
+Candidate Application
+↓
+Screening
+↓
+Assessment
+↓
+Interview
+↓
+Offer Letter
+↓
+Onboarding
+↓
+Employee Creation
+
+----------------------------------------------------
+
+Employee Lifecycle Workflow
+
+Join
+↓
+Training
+↓
+Deployment
+↓
+Performance Review
+↓
+Promotion/Transfer
+↓
+Exit
+
+----------------------------------------------------
+
+Performance Workflow
+
+Goal Assignment
+↓
+Review Cycle
+↓
+Assessment
+↓
+Manager Review
+↓
+HR Review
+↓
+Final Rating
+
+----------------------------------------------------
+
+Training Workflow
+
+Training Need
+↓
+Training Assignment
+↓
+Session
+↓
+Assessment
+↓
+Certification
+↓
+Performance Improvement
+
+====================================================
+DATABASE DESIGN
+====================================================
+
+Generate:
+
+Complete PostgreSQL Schema
+
+ER Diagram
+
+Prisma Models
+
+Indexes
+
+Relationships
+
+Constraints
+
+Audit Tables
+
+History Tables
+
+Training Tables
+
+Recruitment Tables
+
+Performance Tables
+
+====================================================
+RBAC
+====================================================
+
+Roles
+
+Super Admin
+
+HR Director
+
+HR Manager
+
+Recruitment Manager
+
+Recruiter
+
+Training Manager
+
+Trainer
+
+Operations Manager
+
+Branch Manager
+
+Supervisor
+
+Employee
+
+Client User
+
+Generate detailed permission matrix.
+
+====================================================
+AI FEATURES
+====================================================
+
+Resume Parsing
+
+Candidate Matching
+
+Interview Scoring
+
+Offer Acceptance Prediction
+
+Employee Attrition Prediction
+
+Promotion Recommendation
+
+Training Recommendation Engine
+
+Skill Gap Analysis
+
+Performance Prediction
+
+Succession Planning
+
+====================================================
+OUTPUT REQUIRED
+====================================================
+
+Generate:
+
+1. Information Architecture
+2. Complete Menu Structure
+3. Database Schema
+4. Prisma Models
+5. NestJS Module Structure
+6. API Endpoints
+7. Screen Designs
+8. Workflow Diagrams
+9. Recruitment Engine Design
+10. Performance Engine Design
+11. Training Engine Design
+12. Employee Lifecycle Design
+13. Mobile App Structure
+14. Audit Framework
+15. Production Ready Folder Structure
+
+Build this as an enterprise-grade Talent Management System specialized for Government Tender Manpower Contractors with deep integration into HR, Attendance, Payroll, Deployment, Billing, and Compliance modules.

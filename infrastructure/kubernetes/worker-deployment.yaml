@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workzen-worker
+  namespace: workzen
+  labels:
+    app: workzen-worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: workzen-worker
+  template:
+    metadata:
+      labels:
+        app: workzen-worker
+    spec:
+      containers:
+        - name: worker
+          image: ghcr.io/GITHUB_ORG/workzen-api:latest
+          imagePullPolicy: Always
+          command: ['node', 'dist/worker.js']
+          envFrom:
+            - configMapRef:
+                name: workzen-config
+            - secretRef:
+                name: workzen-secrets
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 800m
+              memory: 768Mi
+          livenessProbe:
+            exec:
+              command: ['node', '-e', 'process.exit(0)']
+            initialDelaySeconds: 30
+            periodSeconds: 60
+      imagePullSecrets:
+        - name: ghcr-secret

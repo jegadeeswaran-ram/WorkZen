@@ -1,0 +1,29 @@
+Full project structure: 140+ files across all layers
+
+Next.js Frontend (all 14 module pages)
+clients/ — card grid with revenue trend, sector donut chart, paginated search
+recruitment/ — pipeline with funnel chart, candidate stages, requisitions table
+deployment/ — weekly roster grid, shift distribution, site cards (grid/list toggle)
+finance/ — journal/bank/expenses tabbed view, cash flow chart
+assets/ — status breakdown, category filter, assignment tracking
+documents/ — grid/list toggle, S3 upload via signed URL, version control
+workflows/ — pending approvals with inline approve/reject + comment, history log
+settings/ — company info, security toggles, notifications, integrations, API keys
+Flutter Mobile App (apps/mobile/)
+main.dart — Firebase init, GoRouter, dark theme
+Auth flow: splash → login with TOTP support
+Attendance: GPS check-in/check-out with live clock + weekly view
+Leave: balance cards, apply sheet with date picker
+Payslips: list with PDF download
+Profile: settings + sign out
+Notifications screen
+Infrastructure
+apps/api/Dockerfile + apps/web/Dockerfile — multi-stage production builds
+docker-compose.prod.yml — 2× API replicas, 2× web replicas, nginx, postgres, redis
+infrastructure/nginx/nginx.conf — SSL, rate limiting, WebSocket proxy
+infrastructure/kubernetes/ — 9 manifests: namespace, configmap, secret, API/web/worker deployments with HPA, postgres + redis StatefulSets, Ingress
+.github/workflows/ci.yml — lint → test (with real PG/Redis) → build + push to GHCR → deploy staging (develop) → deploy production with manual approval gate + auto-rollback
+Shared Packages
+packages/shared/src/index.ts — TypeScript enums, ApiResponse types, PaginationParams
+packages/config/src/index.ts — Indian payroll constants (PF/ESI/PT slabs, LWF states)
+packages/database/src/seed.ts — 39 permissions, 13 roles with correct RBAC, demo tenant, super admin + HR manager accounts

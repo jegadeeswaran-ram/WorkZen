@@ -1,0 +1,177 @@
+
+WorkNest - Laravel HRM, Payroll, Attendance, Leave & Loan Management System - CodeCanyon Item for Sale
+Live Preview Screenshots
+A complete Laravel-based Human Resource Management System designed for employee management, attendance, leave, payroll, recruitment, performance, assets, reports, and employee self-service.
+
+Laravel 13 Livewire 4 Tailwind CSS 4 Spatie Permission Fortify Auth
+Overview
+WorkNest is a modern Laravel HRM application built for companies, HR teams, managers, and employees. It helps manage the complete employee lifecycle from hiring to retirement, including employee records, attendance, leave, payroll, loans, recruitment, onboarding, performance, assets, helpdesk, reports, and self-service features.
+
+Key Highlights
+Complete HRM Suite
+Employee management, departments, designations, branches, teams, documents, HR records, and employee profiles.
+
+Payroll, Loan & Provident Fund
+Salary structures, payroll run, payslips, loans, advance salary, bonuses, reimbursements, PF, tax, and statutory settings.
+
+Attendance, Shifts & Leave
+Check-in/out, attendance corrections, shifts, rosters, attendance policies, holidays, leave requests, approvals, balances, and encashments.
+
+Employee Self-Service
+Employees can view attendance, apply for leave, download payslips, submit requests, view assets, trainings, documents, and more.
+
+Modern Admin Experience
+Livewire-powered admin panel, global search, quick create, notifications, audit logs, demo mode, and reusable UI components.
+
+
+______________________________________________________________________________________________________________________________________________________
+
+Module	Features
+People & Organization:	Employees, profiles, departments, designations, branches, job grades, teams, documents, org chart.
+Attendance & Time:	Check in/out, daily attendance, corrections, shifts, rosters, policies, holidays, comp-off.
+Leave Management:	Leave requests, approvals, leave calendar, balances, leave types, policies, encashments.
+Payroll & Finance:	Payroll runs, payslips, salary components, loans, advances, bonuses, reimbursements, tax, PF, reports.
+Recruitment:	Job requisitions, job posts, candidates, applications, interviews, offer letters, public career page.
+Performance:	KPIs, goals, review cycles, self review, manager review, 360 feedback, probation, promotion, PIP.
+Training:	Training categories, providers, courses, sessions, requests, enrollments, reports.
+Asset Management:	Asset categories, vendors, inventory, requests, allocations, returns, maintenance, reports.
+Onboarding & Offboarding:	Templates, processes, task checklists, buddies, exit interviews, final settlements.
+Reports: Hub	Workforce, money, talent, engagement, records, and executive reports.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+Feature List
+Employee Management
+Employee Profiles
+Department Management
+Designation Management
+Branch Management
+Job Grades
+Team Management
+Employee Documents
+Attendance Management
+Check In / Check Out
+Attendance Correction
+Shift Management
+Roster Management
+Holiday Management
+Comp-Off Ledger
+Leave Requests
+Leave Approvals
+Leave Calendar
+Leave Balance
+Leave Encashment
+Payroll Run
+Payslip Management
+Payslip PDF
+Salary Components
+Salary Structures
+Employee Payroll Profile
+Provident Fund Settings
+Tax Settings
+Loan Management
+Advance Salary
+Bonus Management
+Reimbursements
+Tax Declarations
+Timesheets
+Project Management
+Recruitment Dashboard
+Job Requisitions
+Job Posts
+Public Career Page
+Candidates
+Applications
+Interview Scheduling
+Offer Letters
+Performance Reviews
+KPIs & Goals
+360 Feedback
+Probation Reviews
+Promotion Recommendations
+Performance Improvement Plan
+Training Courses
+Training Sessions
+Training Requests
+Asset Requests
+Asset Allocation
+Asset Maintenance
+Expense Claims
+Helpdesk Tickets
+SLA Tracking
+Meetings
+Meeting Minutes
+Action Items
+Goals & OKRs
+Benefits & Insurance
+Kudos
+Pulse Survey
+Suggestions
+Knowledge Base
+Polls
+Announcements
+Company Policies
+Letter Generator
+Document Requests
+Employee Contracts
+Awards
+Warnings
+Transfers
+Business Trips
+Complaints
+Resignation Requests
+HR Calendar
+Exit Interviews
+Final Settlements
+----------------------------------------------------------------------------------------------------------------------------------
+
+Employee Self-Service Portal
+WorkNest includes a dedicated employee self-service experience where employees can manage their own HR activities without depending on HR for every request.
+
+View profile and documents
+Check attendance history
+Apply for leave
+View leave balance
+Download payslips
+Submit loan, advance salary, expense and document requests
+View assigned assets and trainings
+Access announcements, policies, KB articles and HR calendar
+
+______________________________________________________________________________________________________________________________________________________
+
+Advanced Payroll & Finance
+The payroll module is designed to handle salary structures, earnings, deductions, attendance-based calculations, leave loss of pay, loans, bonuses, reimbursements, tax declarations, provident fund, and payslip generation.
+
+Salary Components
+Employee Salary Structure
+Payroll Calculator
+Payroll Runs
+Payslip PDF
+Loan EMI Deduction
+Advance Salary Deduction
+Bonus and Reimbursement
+Provident Fund Register
+Tax/TDS Register
+YTD Summary
+Reports Hub
+WorkNest includes a centralized reports hub with multiple HR, payroll, workforce, talent, engagement and executive reports.
+
+Headcount & Attrition Report
+Attendance Report
+Leave Report
+Payroll Report
+Loan & Advance Report
+Expense Reimbursement Report
+Recruitment Funnel Report
+Training Effectiveness Report
+Performance Report
+Asset Report
+Helpdesk Report
+HR KPI Report
+
+______________________________________________________________________________________________________________________________________________________
+
+
+
+Create Deatiled Masters menu or module - for all ilist fields Deatiled  where erver needs
+Create User permissions matrix 

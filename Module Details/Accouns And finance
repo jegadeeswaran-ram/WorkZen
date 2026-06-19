@@ -1,0 +1,786 @@
+You are a Principal ERP Architect, Chartered Accountant, Tally Expert, GST Consultant, Financial Controller, Product Architect, and Senior Full Stack Engineer.
+
+Design and build a complete enterprise-grade Billing, Receivables, Revenue, GST, Costing, and Accounting Platform specifically for a Government Tender Manpower Management ERP.
+
+The system must be equivalent to Tally ERP + Zoho Books + Contract Billing + Manpower Billing + Tender Profitability combined into a single SaaS platform.
+
+=================================================
+TECH STACK
+=================================================
+
+Frontend:
+- Next.js 15
+- TypeScript
+- Tailwind
+- Shadcn UI
+- TanStack Table
+- Apex Charts
+
+Backend:
+- NestJS
+- PostgreSQL
+- Prisma ORM
+- Redis
+- BullMQ
+
+Architecture:
+- Multi Tenant SaaS
+- Microservice Ready
+- Event Driven
+- Audit Logging
+
+=================================================
+CORE OBJECTIVE
+=================================================
+
+The billing platform must support:
+
+Government Tenders
+
+Contract Billing
+
+Attendance Billing
+
+Shift Billing
+
+Headcount Billing
+
+Manpower Billing
+
+GST Billing
+
+Receivables
+
+Collections
+
+Cost Center Accounting
+
+Tender Profitability
+
+Revenue Recognition
+
+Multi Branch Accounting
+
+Multi Company Accounting
+
+Client Portal
+
+Approval Workflows
+
+Tally Style Accounting Engine
+
+=================================================
+MENU STRUCTURE
+=================================================
+
+Create complete menu hierarchy.
+
+=================================================
+MAIN MENU
+=================================================
+
+Billing & Finance
+
+=================================================
+SUB MENUS
+=================================================
+
+1. Dashboard
+
+2. Billing Management
+
+3. Rate Management
+
+4. Billing Sheets
+
+5. Invoice Management
+
+6. GST Management
+
+7. Accounts Receivable
+
+8. Collection Management
+
+9. Revenue Management
+
+10. Cost Centers
+
+11. Tender Profitability
+
+12. Accounting
+
+13. Banking
+
+14. Reports
+
+15. Audit & Compliance
+
+16. Settings
+
+=================================================
+MODULE 1
+DASHBOARD
+=================================================
+
+Widgets:
+
+Total Revenue
+
+Pending Revenue
+
+Monthly Billing
+
+Outstanding Amount
+
+Collection Percentage
+
+GST Liability
+
+Top Clients
+
+Top Contracts
+
+Profitability
+
+Upcoming Renewals
+
+Aging Summary
+
+Cash Flow
+
+KPIs:
+
+DSO
+
+Revenue Growth
+
+Contract Margin
+
+Collection Efficiency
+
+=================================================
+MODULE 2
+BILLING MANAGEMENT
+=================================================
+
+Menu:
+
+Billing Management
+
+Submenu:
+
+Create Billing Cycle
+
+Generate Billing
+
+Draft Billing
+
+Approved Billing
+
+Rejected Billing
+
+Posted Billing
+
+Billing History
+
+Functions:
+
+Create Monthly Billing
+
+Create Weekly Billing
+
+Create Custom Billing
+
+Bulk Billing
+
+Mass Billing
+
+Auto Billing
+
+Manual Billing
+
+=================================================
+MODULE 3
+RATE MANAGEMENT
+=================================================
+
+Rate Master
+
+Submenus:
+
+Category Rates
+
+Contract Rates
+
+Employee Rates
+
+Shift Rates
+
+OT Rates
+
+Holiday Rates
+
+Night Shift Rates
+
+Escalation Rules
+
+Fields:
+
+Contract
+
+Location
+
+Category
+
+Designation
+
+Rate
+
+Effective Date
+
+Expiry Date
+
+=================================================
+MODULE 4
+BILLING SHEETS
+=================================================
+
+Attendance Import
+
+Attendance Validation
+
+Billing Calculation
+
+Billing Adjustments
+
+Extra Duty Billing
+
+Penalty Billing
+
+OT Billing
+
+Replacement Billing
+
+Short Manpower Recovery
+
+Approval Workflow
+
+Billing Sheet Reports
+
+=================================================
+MODULE 5
+INVOICE MANAGEMENT
+=================================================
+
+Invoice Dashboard
+
+Create Invoice
+
+Invoice Approval
+
+Invoice Posting
+
+Invoice Delivery
+
+Invoice Tracking
+
+Credit Notes
+
+Debit Notes
+
+Proforma Invoice
+
+Supplementary Invoice
+
+Advance Invoice
+
+Recurring Invoice
+
+Invoice Cancellation
+
+Invoice Revision
+
+Invoice Templates
+
+Invoice Series
+
+Invoice Settings
+
+=================================================
+MODULE 6
+GST MANAGEMENT
+=================================================
+
+GST Dashboard
+
+GST Ledger
+
+GST Liability
+
+Input Tax Credit
+
+Output Tax
+
+HSN Management
+
+GST Return Data
+
+GSTR1
+
+GSTR3B
+
+GST Audit Reports
+
+GST Reconciliation
+
+=================================================
+MODULE 7
+ACCOUNTS RECEIVABLE
+=================================================
+
+Customer Master
+
+Customer Ledger
+
+Outstanding Tracking
+
+Aging Analysis
+
+Customer Statement
+
+Interest Calculation
+
+Credit Limit
+
+Credit Hold
+
+Reminder Engine
+
+Legal Follow-up
+
+Recovery Notes
+
+Recovery Workflow
+
+=================================================
+MODULE 8
+COLLECTION MANAGEMENT
+=================================================
+
+Collection Dashboard
+
+Payment Receipt
+
+Advance Receipt
+
+Security Deposit Receipt
+
+Cheque Management
+
+RTGS Management
+
+NEFT Management
+
+UPI Collection
+
+Collection Allocation
+
+Unallocated Receipts
+
+Bank Confirmation
+
+Collection Reports
+
+=================================================
+MODULE 9
+REVENUE MANAGEMENT
+=================================================
+
+Revenue Dashboard
+
+Accrual Revenue
+
+Deferred Revenue
+
+Recognized Revenue
+
+Unbilled Revenue
+
+Revenue Schedules
+
+Revenue Allocation
+
+Revenue Reports
+
+=================================================
+MODULE 10
+COST CENTER MANAGEMENT
+=================================================
+
+Tender Cost Center
+
+Location Cost Center
+
+Department Cost Center
+
+Branch Cost Center
+
+Project Cost Center
+
+Expense Allocation
+
+Revenue Allocation
+
+Cost Center P&L
+
+=================================================
+MODULE 11
+TENDER PROFITABILITY
+=================================================
+
+Tender Revenue
+
+Salary Cost
+
+PF Cost
+
+ESI Cost
+
+Admin Cost
+
+Travel Cost
+
+Uniform Cost
+
+Asset Cost
+
+Contract Margin
+
+Net Profit
+
+Gross Profit
+
+Profitability Dashboard
+
+Tender Comparison
+
+Tender Ranking
+
+=================================================
+MODULE 12
+ACCOUNTING MODULE
+=================================================
+
+Chart Of Accounts
+
+Ledgers
+
+Groups
+
+Voucher Entry
+
+Journal Entry
+
+Receipt Voucher
+
+Payment Voucher
+
+Contra Voucher
+
+Debit Note
+
+Credit Note
+
+Opening Balance
+
+Closing Balance
+
+Day Book
+
+General Ledger
+
+Sub Ledger
+
+Trial Balance
+
+Balance Sheet
+
+Profit And Loss
+
+Cash Flow
+
+Fund Flow
+
+=================================================
+MODULE 13
+BANKING
+=================================================
+
+Bank Accounts
+
+Bank Reconciliation
+
+Statement Import
+
+Cheque Printing
+
+Cheque Tracking
+
+Bank Transfers
+
+Cash Management
+
+Petty Cash
+
+Virtual Accounts
+
+=================================================
+MODULE 14
+REPORTS
+=================================================
+
+Revenue Reports
+
+Billing Reports
+
+Invoice Reports
+
+GST Reports
+
+Outstanding Reports
+
+Collection Reports
+
+Customer Reports
+
+Tender Reports
+
+Cost Center Reports
+
+Accounting Reports
+
+Financial Statements
+
+Audit Reports
+
+MIS Reports
+
+=================================================
+MODULE 15
+AUDIT & COMPLIANCE
+=================================================
+
+Audit Logs
+
+Activity Logs
+
+GST Audit
+
+Internal Audit
+
+Approval History
+
+User Activity
+
+Document History
+
+Change Tracking
+
+=================================================
+MODULE 16
+SETTINGS
+=================================================
+
+Invoice Numbering
+
+GST Settings
+
+Financial Year
+
+Branch Settings
+
+Cost Center Settings
+
+Approval Matrix
+
+Accounting Rules
+
+Email Templates
+
+SMS Templates
+
+WhatsApp Templates
+
+=================================================
+WORKFLOWS
+=================================================
+
+WORKFLOW 1
+
+Attendance
+↓
+Billing Sheet
+↓
+Billing Approval
+↓
+Invoice
+↓
+Accounting Entry
+↓
+Receivable
+↓
+Collection
+↓
+Profitability
+
+WORKFLOW 2
+
+Invoice
+↓
+GST Posting
+↓
+Ledger Posting
+↓
+Customer Ledger
+↓
+Trial Balance
+
+WORKFLOW 3
+
+Receipt
+↓
+Bank Entry
+↓
+Customer Adjustment
+↓
+Outstanding Update
+
+=================================================
+DATABASE DESIGN
+=================================================
+
+Generate:
+
+Complete PostgreSQL Schema
+
+ER Diagram
+
+Prisma Models
+
+Indexes
+
+Relationships
+
+Constraints
+
+Audit Tables
+
+Accounting Tables
+
+GST Tables
+
+Invoice Tables
+
+Collection Tables
+
+=================================================
+RBAC
+=================================================
+
+Roles:
+
+Super Admin
+
+Finance Director
+
+Accounts Manager
+
+Billing Manager
+
+Billing Executive
+
+Collection Executive
+
+Auditor
+
+Branch Manager
+
+Client User
+
+Viewer
+
+Generate detailed permission matrix.
+
+=================================================
+API DEVELOPMENT
+=================================================
+
+Generate:
+
+REST APIs
+
+GraphQL APIs
+
+Swagger Documentation
+
+Pagination
+
+Filtering
+
+Search
+
+Bulk Operations
+
+Import Export APIs
+
+=================================================
+UI REQUIREMENTS
+=================================================
+
+Create enterprise-grade screens for every menu.
+
+For every screen provide:
+
+Page Layout
+
+Filters
+
+Tables
+
+Forms
+
+Actions
+
+Approval Buttons
+
+Reports
+
+Charts
+
+KPIs
+
+Export Options
+
+=================================================
+OUTPUT
+=================================================
+
+Generate:
+
+1. Complete Information Architecture
+2. Menu/Submenu Structure
+3. Database Design
+4. Prisma Models
+5. NestJS Modules
+6. API Endpoints
+7. Screen Wireframes
+8. Workflow Diagrams
+9. Accounting Engine Design
+10. GST Engine Design
+11. Revenue Recognition Design
+12. Receivables Design
+13. Collection Design
+14. Tender Profitability Design
+15. Production Ready Folder Structure
+
+Design this as a Fortune 500 enterprise SaaS application with Tally-level accounting depth and government manpower contract billing specialization.

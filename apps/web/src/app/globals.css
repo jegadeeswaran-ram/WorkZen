@@ -1,0 +1,486 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=DM+Sans:ital,opsz,wght@0,9..40,200..1000;1,9..40,200..1000&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme Variables ──────────────────────────────────────────────────────── */
+:root {
+  /* Shadcn/Radix light defaults */
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 231 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 231 91% 60%;
+  --radius: 0.75rem;
+
+  --sidebar-width: 260px;
+  --header-height: 64px;
+
+  /* WorkZen brand colors */
+  --wz-navy: #0a1628;
+  --wz-blue: #3b82f6;
+  --wz-indigo: #6366f1;
+  --wz-gold: #f59e0b;
+  --wz-emerald: #10b981;
+  --wz-rose: #f43f5e;
+  --wz-violet: #8b5cf6;
+
+  /* Light mode semantic tokens */
+  --wz-page-bg: #f1f5f9;
+  --wz-card-bg: #ffffff;
+  --wz-card-border: rgba(0, 0, 0, 0.07);
+  --wz-card-hover-bg: rgba(0, 0, 0, 0.02);
+  --wz-card-hover-border: rgba(99, 102, 241, 0.3);
+  --wz-input-bg: rgba(0, 0, 0, 0.04);
+  --wz-input-border: rgba(0, 0, 0, 0.1);
+  --wz-input-focus-border: rgba(99, 102, 241, 0.5);
+  --wz-input-color: #0f172a;
+  --wz-input-placeholder: #94a3b8;
+  --wz-text-primary: #0f172a;
+  --wz-text-secondary: #475569;
+  --wz-text-muted: #94a3b8;
+  --wz-sidebar-bg: #ffffff;
+  --wz-sidebar-border: rgba(0, 0, 0, 0.07);
+  --wz-header-bg: rgba(255, 255, 255, 0.92);
+  --wz-header-border: rgba(0, 0, 0, 0.07);
+  --wz-scrollbar: rgba(0, 0, 0, 0.12);
+  --wz-table-th-color: #64748b;
+  --wz-table-row-border: rgba(0, 0, 0, 0.05);
+  --wz-table-row-hover: rgba(0, 0, 0, 0.025);
+  --wz-table-td-color: #334155;
+  --wz-sidebar-link: #475569;
+  --wz-sidebar-link-hover-bg: rgba(0, 0, 0, 0.05);
+  --wz-sidebar-link-active-bg: rgba(99, 102, 241, 0.1);
+  --wz-sidebar-link-active-color: #4f46e5;
+  --wz-sidebar-label: rgba(0, 0, 0, 0.35);
+  --wz-btn-secondary-bg: rgba(0, 0, 0, 0.06);
+  --wz-btn-secondary-color: #1e293b;
+  --wz-btn-secondary-border: rgba(0, 0, 0, 0.1);
+  --wz-btn-secondary-hover-bg: rgba(0, 0, 0, 0.1);
+  --wz-select-bg: rgba(0, 0, 0, 0.04);
+  --wz-select-color: #0f172a;
+  --wz-option-bg: #ffffff;
+  --wz-option-color: #0f172a;
+  --wz-stat-before: rgba(99, 102, 241, 0.35);
+}
+
+.dark {
+  /* Shadcn/Radix dark overrides */
+  --background: 222 47% 7%;
+  --foreground: 210 40% 96%;
+  --card: 222 40% 9%;
+  --card-foreground: 210 40% 96%;
+  --popover: 222 40% 9%;
+  --popover-foreground: 210 40% 96%;
+  --secondary: 222 30% 14%;
+  --secondary-foreground: 210 40% 96%;
+  --muted: 222 30% 14%;
+  --muted-foreground: 215 20% 55%;
+  --accent: 222 30% 18%;
+  --accent-foreground: 210 40% 96%;
+  --border: 222 20% 16%;
+  --input: 222 20% 16%;
+
+  /* Dark mode semantic tokens */
+  --wz-page-bg: #060e1a;
+  --wz-card-bg: rgba(255, 255, 255, 0.03);
+  --wz-card-border: rgba(255, 255, 255, 0.07);
+  --wz-card-hover-bg: rgba(255, 255, 255, 0.05);
+  --wz-card-hover-border: rgba(99, 102, 241, 0.3);
+  --wz-input-bg: rgba(255, 255, 255, 0.05);
+  --wz-input-border: rgba(255, 255, 255, 0.08);
+  --wz-input-focus-border: rgba(99, 102, 241, 0.5);
+  --wz-input-color: rgba(255, 255, 255, 0.9);
+  --wz-input-placeholder: rgba(255, 255, 255, 0.25);
+  --wz-text-primary: rgba(255, 255, 255, 0.95);
+  --wz-text-secondary: rgba(255, 255, 255, 0.7);
+  --wz-text-muted: rgba(255, 255, 255, 0.4);
+  --wz-sidebar-bg: rgba(6, 14, 26, 0.95);
+  --wz-sidebar-border: rgba(255, 255, 255, 0.06);
+  --wz-header-bg: rgba(6, 14, 26, 0.85);
+  --wz-header-border: rgba(255, 255, 255, 0.06);
+  --wz-scrollbar: rgba(255, 255, 255, 0.1);
+  --wz-table-th-color: rgba(255, 255, 255, 0.35);
+  --wz-table-row-border: rgba(255, 255, 255, 0.04);
+  --wz-table-row-hover: rgba(255, 255, 255, 0.03);
+  --wz-table-td-color: rgba(255, 255, 255, 0.75);
+  --wz-sidebar-link: rgba(255, 255, 255, 0.5);
+  --wz-sidebar-link-hover-bg: rgba(255, 255, 255, 0.06);
+  --wz-sidebar-link-active-bg: rgba(99, 102, 241, 0.15);
+  --wz-sidebar-link-active-color: #818cf8;
+  --wz-sidebar-label: rgba(255, 255, 255, 0.22);
+  --wz-btn-secondary-bg: rgba(255, 255, 255, 0.06);
+  --wz-btn-secondary-color: rgba(255, 255, 255, 0.8);
+  --wz-btn-secondary-border: rgba(255, 255, 255, 0.08);
+  --wz-btn-secondary-hover-bg: rgba(255, 255, 255, 0.1);
+  --wz-select-bg: rgba(255, 255, 255, 0.05);
+  --wz-select-color: rgba(255, 255, 255, 0.9);
+  --wz-option-bg: #0f1b2d;
+  --wz-option-color: rgba(255, 255, 255, 0.9);
+  --wz-stat-before: rgba(99, 102, 241, 0.5);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--wz-page-bg);
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  /* === GLASS CARDS === */
+  .glass-card {
+    background: var(--wz-card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--wz-card-border);
+    border-radius: 1rem;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300;
+  }
+  .glass-card-hover:hover {
+    background: var(--wz-card-hover-bg);
+    border-color: var(--wz-card-hover-border);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(99, 102, 241, 0.08);
+  }
+
+  /* Light mode card shadow */
+  :root .glass-card,
+  html:not(.dark) .glass-card {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  /* === STAT CARDS === */
+  .stat-card {
+    @apply glass-card p-5 relative overflow-hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--wz-stat-before), transparent);
+  }
+
+  /* === SIDEBAR === */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 cursor-pointer;
+    color: var(--wz-sidebar-link);
+  }
+  .sidebar-link:hover {
+    background: var(--wz-sidebar-link-hover-bg);
+    color: var(--wz-text-primary);
+  }
+  .sidebar-link.active {
+    background: var(--wz-sidebar-link-active-bg);
+    color: var(--wz-sidebar-link-active-color);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+  }
+  .sidebar-link.active .sidebar-icon {
+    color: var(--wz-sidebar-link-active-color);
+  }
+
+  /* === TABLES === */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  .data-table thead th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
+    color: var(--wz-table-th-color);
+    border-bottom: 1px solid var(--wz-table-row-border);
+  }
+  .data-table tbody tr {
+    @apply transition-colors duration-150;
+    border-bottom: 1px solid var(--wz-table-row-border);
+  }
+  .data-table tbody tr:hover {
+    background: var(--wz-table-row-hover);
+  }
+  .data-table tbody td {
+    @apply px-4 py-3.5;
+    color: var(--wz-table-td-color);
+  }
+
+  /* Inline-styled table overrides for light mode */
+  html:not(.dark) table thead tr th {
+    color: var(--wz-table-th-color) !important;
+    border-color: var(--wz-table-row-border) !important;
+  }
+  html:not(.dark) table tbody tr {
+    border-color: var(--wz-table-row-border) !important;
+  }
+  html:not(.dark) table tbody tr:hover {
+    background: var(--wz-table-row-hover) !important;
+  }
+  html:not(.dark) table tbody td {
+    color: var(--wz-table-td-color) !important;
+  }
+
+  /* === BADGES === */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-success { background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); }
+  .badge-warning { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2); }
+  .badge-danger  { background: rgba(244, 63, 94, 0.12);  color: #e11d48; border: 1px solid rgba(244, 63, 94, 0.2); }
+  .badge-info    { background: rgba(59, 130, 246, 0.12);  color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.2); }
+  .badge-neutral { background: rgba(0,0,0,0.06); color: #64748b; border: 1px solid rgba(0,0,0,0.08); }
+  .badge-gold    { background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2); }
+
+  .dark .badge-success { color: #34d399; }
+  .dark .badge-warning { color: #fbbf24; }
+  .dark .badge-danger  { color: #fb7185; }
+  .dark .badge-info    { color: #60a5fa; }
+  .dark .badge-neutral { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); border-color: rgba(255,255,255,0.08); }
+  .dark .badge-gold    { color: #fbbf24; }
+
+  /* === BUTTONS === */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    color: white;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 25px rgba(99, 102, 241, 0.4);
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200;
+    background: var(--wz-btn-secondary-bg);
+    color: var(--wz-btn-secondary-color);
+    border: 1px solid var(--wz-btn-secondary-border);
+  }
+  .btn-secondary:hover {
+    background: var(--wz-btn-secondary-hover-bg);
+  }
+
+  /* === INPUTS === */
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 outline-none;
+    background: var(--wz-input-bg);
+    border: 1px solid var(--wz-input-border);
+    color: var(--wz-input-color);
+  }
+  .input-field:focus {
+    border-color: var(--wz-input-focus-border);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+  .input-field::placeholder { color: var(--wz-input-placeholder); }
+
+  /* Select/Option theme */
+  select.input-field {
+    background: var(--wz-select-bg);
+    color: var(--wz-select-color);
+    color-scheme: inherit;
+  }
+
+  .dark select {
+    color-scheme: dark;
+    background: var(--wz-select-bg);
+    color: var(--wz-select-color);
+  }
+  .dark option {
+    background: var(--wz-option-bg);
+    color: var(--wz-option-color);
+  }
+  .dark option:checked,
+  .dark option:hover {
+    background: #1e2d4a;
+    color: #818cf8;
+  }
+
+  html:not(.dark) select {
+    color-scheme: light;
+  }
+
+  /* === SCROLLBAR === */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--wz-scrollbar); border-radius: 100px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--wz-scrollbar); opacity: 0.8; }
+
+  /* === PAGE TRANSITIONS === */
+  .page-enter { animation: fade-in 0.15s ease-out; }
+
+  /* === NAV PROGRESS BAR === */
+  .nav-progress {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    z-index: 9999;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7);
+    animation: nav-bar 0.4s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* === SKELETON === */
+  .skeleton {
+    background: linear-gradient(90deg, var(--wz-input-bg) 25%, var(--wz-card-hover-bg) 50%, var(--wz-input-bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 8px;
+  }
+
+  /* === GRADIENT TEXT === */
+  .gradient-text {
+    background: linear-gradient(135deg, #818cf8, #a78bfa, #60a5fa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* === GLOW EFFECTS === */
+  .glow-indigo { box-shadow: 0 0 30px rgba(99, 102, 241, 0.2); }
+  .glow-gold   { box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); }
+  .glow-emerald{ box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
+
+  /* Animate pulse skeleton light mode */
+  html:not(.dark) .animate-pulse > div {
+    background: rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* ── Light Mode: Override Hardcoded Inline Dark-Theme Styles ──────────────
+     Page components use rgba(255,255,255,...) colors written for dark mode.
+     CSS attribute selectors + !important are higher priority than inline
+     styles in the cascade (author !important > author normal + inline).   */
+
+  /* rgba(255,255,255,X) text → dark slate.
+     React serializes JSX style props with spaces (rgba(255, 255, 255, 0.4))
+     while manually written styles may omit spaces — match both. */
+  html:not(.dark) [style*="color: rgba(255,255,255"],
+  html:not(.dark) [style*="color: rgba(255, 255, 255"] {
+    color: #334155 !important;
+  }
+
+  /* rgba(255,255,255,X) backgrounds — dark ghost cards, transparent overlays */
+  html:not(.dark) [style*="background: rgba(255,255,255"],
+  html:not(.dark) [style*="background: rgba(255, 255, 255"] {
+    background: var(--wz-card-bg) !important;
+    border-color: var(--wz-card-border) !important;
+  }
+
+  /* Explicit color: white / #fff / #ffffff / rgb(255,255,255)
+     Browsers normalize #fff -> rgb(255, 255, 255) in inline styles set via JS */
+  html:not(.dark) [style*="color: white"],
+  html:not(.dark) [style*="color: #fff"],
+  html:not(.dark) [style*="color: #ffffff"],
+  html:not(.dark) [style*="color: rgb(255, 255, 255)"] {
+    color: #0f172a !important;
+  }
+
+  /* Tailwind text-white class in content areas */
+  html:not(.dark) .text-white {
+    color: #0f172a !important;
+  }
+
+  /* Exception: btn-primary always keeps white text */
+  html:not(.dark) .btn-primary,
+  html:not(.dark) .btn-primary * { color: white !important; }
+
+  /* Exception: elements with a solid hex background keep white text
+     (colored action buttons — accent, danger, warning, etc.) */
+  html:not(.dark) [style*="background: #6"][style*="color: white"],
+  html:not(.dark) [style*="background: #3"][style*="color: white"],
+  html:not(.dark) [style*="background: #1"][style*="color: white"],
+  html:not(.dark) [style*="background: #f"][style*="color: white"],
+  html:not(.dark) [style*="background: #e"][style*="color: white"],
+  html:not(.dark) [style*="background: #d"][style*="color: white"],
+  html:not(.dark) [style*="background: #a"][style*="color: white"],
+  html:not(.dark) [style*="background: #8"][style*="color: white"] { color: white !important; }
+
+  /* Exception: avatar / icon boxes with gradient background stay white */
+  html:not(.dark) [style*="background: linear-gradient"][style*="color: white"],
+  html:not(.dark) [style*="background: linear-gradient"][style*="color: #fff"],
+  html:not(.dark) [style*="background: linear-gradient"][style*="color: rgb(255, 255, 255)"] {
+    color: white !important;
+  }
+  html:not(.dark) [style*="background: linear-gradient"] .text-white {
+    color: white !important;
+  }
+
+  /* Hardcoded dark hex backgrounds (modals, sticky headers, cards)
+     Browsers normalize hex to rgb() when setting via JS style API,
+     so we match both the original hex and the normalized rgb() form. */
+  html:not(.dark) [style*="background: #0d1628"],
+  html:not(.dark) [style*="background: rgb(13, 22, 40)"],
+  html:not(.dark) [style*="background: #0c1628"],
+  html:not(.dark) [style*="background: rgb(12, 22, 40)"],
+  html:not(.dark) [style*="background: #0a1628"],
+  html:not(.dark) [style*="background: rgb(10, 22, 40)"],
+  html:not(.dark) [style*="background: #0d1829"],
+  html:not(.dark) [style*="background: rgb(13, 24, 41)"],
+  html:not(.dark) [style*="background: #060e1a"],
+  html:not(.dark) [style*="background: rgb(6, 14, 26)"],
+  html:not(.dark) [style*="background: #111827"],
+  html:not(.dark) [style*="background: rgb(17, 24, 39)"],
+  html:not(.dark) [style*="background: #0a1220"],
+  html:not(.dark) [style*="background: rgb(10, 18, 32)"],
+  html:not(.dark) [style*="background: #0f1b2d"],
+  html:not(.dark) [style*="background: rgb(15, 27, 45)"],
+  html:not(.dark) [style*="background: #0f1b2e"],
+  html:not(.dark) [style*="background: rgb(15, 27, 46)"],
+  html:not(.dark) [style*="background: #1a1f2e"],
+  html:not(.dark) [style*="background: rgb(26, 31, 46)"],
+  html:not(.dark) [style*="background: #1e1e2e"],
+  html:not(.dark) [style*="background: rgb(30, 30, 46)"],
+  html:not(.dark) [style*="background: #0d1117"],
+  html:not(.dark) [style*="background: rgb(13, 17, 23)"],
+  html:not(.dark) [style*="background: #0c1829"],
+  html:not(.dark) [style*="background: rgb(12, 24, 41)"] {
+    background: var(--wz-card-bg) !important;
+    border-color: var(--wz-card-border) !important;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes nav-bar {
+  from { transform: scaleX(0); transform-origin: left; opacity: 1; }
+  80%  { transform: scaleX(0.9); transform-origin: left; opacity: 1; }
+  to   { transform: scaleX(1); transform-origin: left; opacity: 0; }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
