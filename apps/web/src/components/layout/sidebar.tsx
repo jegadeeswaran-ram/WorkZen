@@ -10,7 +10,7 @@ import {
   LogOut, Bell, ChevronDown, FileSpreadsheet, Tag, Percent,
   BookOpen, BookMarked, Landmark, DollarSign, Database, Lock,
   Network, RefreshCw, AlertTriangle, Star, GraduationCap, Target,
-  Briefcase, Truck, UserCheck, CalendarDays,
+  Briefcase, Truck, UserCheck, CalendarDays, AlertCircle, ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui.store';
@@ -24,11 +24,13 @@ type NavItem = {
   href: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
   badge?: string;
+  roles?: string[];
 };
 
 type NavGroup = {
   label: string;
   items: NavItem[];
+  roles?: string[];
 };
 
 const navGroups: NavGroup[] = [
@@ -71,6 +73,15 @@ const navGroups: NavGroup[] = [
       { label: 'Payroll', href: '/payroll', icon: CreditCard },
       { label: 'Compliance', href: '/compliance', icon: Shield },
     ],
+  },
+  {
+    label: 'Supervisor',
+    items: [
+      { label: 'Sites Overview', href: '/supervisor/sites', icon: MapPin, roles: ['SITE_SUPERVISOR', 'HR_MANAGER', 'OPERATIONS_MANAGER'] },
+      { label: 'Complaints', href: '/supervisor/complaints', icon: AlertCircle, roles: ['SITE_SUPERVISOR', 'HR_MANAGER'] },
+      { label: 'Activity Log', href: '/supervisor/activity', icon: ClipboardList, roles: ['SITE_SUPERVISOR', 'HR_MANAGER'] },
+    ],
+    roles: ['SITE_SUPERVISOR', 'HR_MANAGER', 'OPERATIONS_MANAGER'],
   },
   {
     label: 'Operations',
@@ -125,8 +136,14 @@ const billingFinancePaths = billingFinanceItems
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed } = useUiStore();
-  const { clearAuth } = useAuthStore();
+  const { clearAuth, roles } = useAuthStore();
   const router = useRouter();
+
+  // Helper function to check if user has required roles
+  const hasRequiredRole = (requiredRoles?: string[]): boolean => {
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+    return requiredRoles.some((role) => roles.includes(role));
+  };
 
   // Auto-open when current path is inside Billing & Finance
   const billingFinanceActive = billingFinancePaths.some(
@@ -168,153 +185,162 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {navGroups.map((group, groupIdx) => (
-          <div key={group.label} className={groupIdx > 0 ? 'mt-4' : ''}>
-            {/* Section label — hidden when collapsed */}
-            <AnimatePresence>
-              {!sidebarCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.1 }}
-                  className="px-3 pb-1 text-xs font-semibold uppercase tracking-widest select-none"
-                  style={{ color: 'var(--wz-sidebar-label)' }}
-                >
-                  {group.label}
-                </motion.div>
+        {navGroups.map((group, groupIdx) => {
+          // Check if user has access to this group
+          if (!hasRequiredRole(group.roles)) return null;
+
+          // Filter items based on role access
+          const visibleItems = group.items.filter((item) => hasRequiredRole(item.roles));
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={group.label} className={groupIdx > 0 ? 'mt-4' : ''}>
+              {/* Section label — hidden when collapsed */}
+              <AnimatePresence>
+                {!sidebarCollapsed && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.1 }}
+                    className="px-3 pb-1 text-xs font-semibold uppercase tracking-widest select-none"
+                    style={{ color: 'var(--wz-sidebar-label)' }}
+                  >
+                    {group.label}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Thin divider between groups when collapsed */}
+              {sidebarCollapsed && groupIdx > 0 && (
+                <div className="mx-3 mb-2 border-t" style={{ borderColor: 'var(--wz-sidebar-border)' }} />
               )}
-            </AnimatePresence>
 
-            {/* Thin divider between groups when collapsed */}
-            {sidebarCollapsed && groupIdx > 0 && (
-              <div className="mx-3 mb-2 border-t" style={{ borderColor: 'var(--wz-sidebar-border)' }} />
-            )}
-
-            <div className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(item.href + '/');
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div className={cn('sidebar-link', active && 'active')} title={sidebarCollapsed ? item.label : undefined}>
-                      <item.icon size={18} className="flex-shrink-0 sidebar-icon" />
-                      {!sidebarCollapsed && <span className="flex-1 text-sm">{item.label}</span>}
-                      {!sidebarCollapsed && item.badge && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                          style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#fb7185', border: '1px solid rgba(244,63,94,0.2)' }}>
-                          {item.badge}
-                        </span>
-                      )}
-                      {active && !sidebarCollapsed && <ChevronRight size={14} style={{ color: '#818cf8', opacity: 0.6 }} />}
-                    </div>
-                  </Link>
-                );
-              })}
-
-              {/* Billing & Finance accordion — injected after Payroll & Compliance group */}
-              {group.label === 'Payroll & Compliance' && (
-                <div>
-          {/* Accordion trigger */}
-          <button
-            onClick={() => setBillingFinanceOpen((prev) => !prev)}
-            title={sidebarCollapsed ? 'Billing & Finance' : undefined}
-            className={cn(
-              'sidebar-link w-full text-left',
-              billingFinanceActive && 'active',
-            )}
-          >
-            <Receipt size={18} className="flex-shrink-0 sidebar-icon" />
-            {!sidebarCollapsed && <span className="flex-1 text-sm">Billing &amp; Finance</span>}
-            {!sidebarCollapsed && (
-              <motion.span
-                animate={{ rotate: billingFinanceOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ display: 'flex' }}
-              >
-                <ChevronDown size={14} style={{ color: '#818cf8', opacity: 0.6 }} />
-              </motion.span>
-            )}
-          </button>
-
-          {/* Accordion body */}
-          <AnimatePresence initial={false}>
-            {billingFinanceOpen && !sidebarCollapsed && (
-              <motion.div
-                key="billing-finance-menu"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2, ease: 'easeInOut' }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div className="ml-3 mt-0.5 space-y-0.5 border-l" style={{ borderColor: 'var(--wz-sidebar-border)' }}>
-                  {billingFinanceItems.map((entry, idx) => {
-                    if (entry.type === 'divider') {
-                      return (
-                        <div
-                          key={`divider-${idx}`}
-                          className="px-3 pt-3 pb-0.5 text-xs font-semibold uppercase tracking-widest select-none"
-                          style={{ color: 'var(--wz-sidebar-label)' }}
-                        >
-                          {entry.label}
-                        </div>
-                      );
-                    }
-
-                    const item = entry as {
-                      type: 'item';
-                      label: string;
-                      href: string;
-                      icon: React.ComponentType<{ size?: number; className?: string }>;
-                    };
-                    const active = pathname === item.href || pathname.startsWith(item.href + '/');
-
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        <div
-                          className={cn('sidebar-link pl-3', active && 'active')}
-                          title={undefined}
-                        >
-                          <item.icon size={15} className="flex-shrink-0 sidebar-icon" />
-                          <span className="flex-1 text-sm">{item.label}</span>
-                          {active && <ChevronRight size={12} style={{ color: '#818cf8', opacity: 0.6 }} />}
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Collapsed state: show sub-items as tooltipped icons */}
-          {billingFinanceOpen && sidebarCollapsed && (
-            <div className="mt-0.5 space-y-0.5">
-              {billingFinanceItems
-                .filter((e) => e.type === 'item')
-                .map((entry) => {
-                  const item = entry as {
-                    type: 'item';
-                    label: string;
-                    href: string;
-                    icon: React.ComponentType<{ size?: number; className?: string }>;
-                  };
+              <div className="space-y-0.5">
+                {visibleItems.map((item) => {
                   const active = pathname === item.href || pathname.startsWith(item.href + '/');
                   return (
                     <Link key={item.href} href={item.href}>
-                      <div className={cn('sidebar-link justify-center', active && 'active')} title={item.label}>
-                        <item.icon size={15} className="flex-shrink-0 sidebar-icon" />
+                      <div className={cn('sidebar-link', active && 'active')} title={sidebarCollapsed ? item.label : undefined}>
+                        <item.icon size={18} className="flex-shrink-0 sidebar-icon" />
+                        {!sidebarCollapsed && <span className="flex-1 text-sm">{item.label}</span>}
+                        {!sidebarCollapsed && item.badge && (
+                          <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                            style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#fb7185', border: '1px solid rgba(244,63,94,0.2)' }}>
+                            {item.badge}
+                          </span>
+                        )}
+                        {active && !sidebarCollapsed && <ChevronRight size={14} style={{ color: '#818cf8', opacity: 0.6 }} />}
                       </div>
                     </Link>
                   );
                 })}
+
+                {/* Billing & Finance accordion — injected after Payroll & Compliance group */}
+                {group.label === 'Payroll & Compliance' && (
+                  <div>
+                    {/* Accordion trigger */}
+                    <button
+                      onClick={() => setBillingFinanceOpen((prev) => !prev)}
+                      title={sidebarCollapsed ? 'Billing & Finance' : undefined}
+                      className={cn(
+                        'sidebar-link w-full text-left',
+                        billingFinanceActive && 'active',
+                      )}
+                    >
+                      <Receipt size={18} className="flex-shrink-0 sidebar-icon" />
+                      {!sidebarCollapsed && <span className="flex-1 text-sm">Billing &amp; Finance</span>}
+                      {!sidebarCollapsed && (
+                        <motion.span
+                          animate={{ rotate: billingFinanceOpen ? 180 : 0 }}
+                          transition={{ duration: 0.2 }}
+                          style={{ display: 'flex' }}
+                        >
+                          <ChevronDown size={14} style={{ color: '#818cf8', opacity: 0.6 }} />
+                        </motion.span>
+                      )}
+                    </button>
+
+                    {/* Accordion body */}
+                    <AnimatePresence initial={false}>
+                      {billingFinanceOpen && !sidebarCollapsed && (
+                        <motion.div
+                          key="billing-finance-menu"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeInOut' }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <div className="ml-3 mt-0.5 space-y-0.5 border-l" style={{ borderColor: 'var(--wz-sidebar-border)' }}>
+                            {billingFinanceItems.map((entry, idx) => {
+                              if (entry.type === 'divider') {
+                                return (
+                                  <div
+                                    key={`divider-${idx}`}
+                                    className="px-3 pt-3 pb-0.5 text-xs font-semibold uppercase tracking-widest select-none"
+                                    style={{ color: 'var(--wz-sidebar-label)' }}
+                                  >
+                                    {entry.label}
+                                  </div>
+                                );
+                              }
+
+                              const item = entry as {
+                                type: 'item';
+                                label: string;
+                                href: string;
+                                icon: React.ComponentType<{ size?: number; className?: string }>;
+                              };
+                              const active = pathname === item.href || pathname.startsWith(item.href + '/');
+
+                              return (
+                                <Link key={item.href} href={item.href}>
+                                  <div
+                                    className={cn('sidebar-link pl-3', active && 'active')}
+                                    title={undefined}
+                                  >
+                                    <item.icon size={15} className="flex-shrink-0 sidebar-icon" />
+                                    <span className="flex-1 text-sm">{item.label}</span>
+                                    {active && <ChevronRight size={12} style={{ color: '#818cf8', opacity: 0.6 }} />}
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Collapsed state: show sub-items as tooltipped icons */}
+                    {billingFinanceOpen && sidebarCollapsed && (
+                      <div className="mt-0.5 space-y-0.5">
+                        {billingFinanceItems
+                          .filter((e) => e.type === 'item')
+                          .map((entry) => {
+                            const item = entry as {
+                              type: 'item';
+                              label: string;
+                              href: string;
+                              icon: React.ComponentType<{ size?: number; className?: string }>;
+                            };
+                            const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                            return (
+                              <Link key={item.href} href={item.href}>
+                                <div className={cn('sidebar-link justify-center', active && 'active')} title={item.label}>
+                                  <item.icon size={15} className="flex-shrink-0 sidebar-icon" />
+                                </div>
+                              </Link>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Settings + Profile */}
