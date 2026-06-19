@@ -22,6 +22,19 @@ class SupervisorStats {
 }
 
 // ---------------------------------------------------------------------------
+// Helper
+// ---------------------------------------------------------------------------
+
+List<Map<String, dynamic>> _parseList(dynamic responseData) {
+  final data = responseData['data'];
+  if (data is List) return data.cast<Map<String, dynamic>>();
+  if (data is Map && data['items'] is List) {
+    return (data['items'] as List).cast<Map<String, dynamic>>();
+  }
+  return <Map<String, dynamic>>[];
+}
+
+// ---------------------------------------------------------------------------
 // Team deployments
 // Fields per item: id, employeeId, employee{id,firstName,lastName,
 //   employeeCode,photo,personalPhone}, siteId, shiftId, status
@@ -34,15 +47,7 @@ final supervisorTeamProvider =
     '/deployment',
     queryParameters: {'status': 'ACTIVE', 'limit': 100},
   );
-  final data = r.data['data'];
-  if (data is List) {
-    return data.cast<Map<String, dynamic>>();
-  }
-  // Some paginated endpoints wrap the list under a 'items' or 'records' key
-  if (data is Map && data['items'] is List) {
-    return (data['items'] as List).cast<Map<String, dynamic>>();
-  }
-  return <Map<String, dynamic>>[];
+  return _parseList(r.data);
 });
 
 // ---------------------------------------------------------------------------
@@ -55,14 +60,7 @@ final teamTodayAttendanceProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final api = ref.watch(apiClientProvider);
   final r = await api.get('/attendance/today');
-  final data = r.data['data'];
-  if (data is List) {
-    return data.cast<Map<String, dynamic>>();
-  }
-  if (data is Map && data['items'] is List) {
-    return (data['items'] as List).cast<Map<String, dynamic>>();
-  }
-  return <Map<String, dynamic>>[];
+  return _parseList(r.data);
 });
 
 // ---------------------------------------------------------------------------
@@ -78,14 +76,7 @@ final pendingLeaveRequestsProvider =
     '/attendance/leave-requests',
     queryParameters: {'status': 'PENDING', 'limit': 50},
   );
-  final data = r.data['data'];
-  if (data is List) {
-    return data.cast<Map<String, dynamic>>();
-  }
-  if (data is Map && data['items'] is List) {
-    return (data['items'] as List).cast<Map<String, dynamic>>();
-  }
-  return <Map<String, dynamic>>[];
+  return _parseList(r.data);
 });
 
 // ---------------------------------------------------------------------------
@@ -99,14 +90,7 @@ final supervisorLeaveRequestsHistoryProvider =
     '/attendance/leave-requests',
     queryParameters: {'limit': 20},
   );
-  final data = r.data['data'];
-  if (data is List) {
-    return data.cast<Map<String, dynamic>>();
-  }
-  if (data is Map && data['items'] is List) {
-    return (data['items'] as List).cast<Map<String, dynamic>>();
-  }
-  return <Map<String, dynamic>>[];
+  return _parseList(r.data);
 });
 
 // ---------------------------------------------------------------------------
