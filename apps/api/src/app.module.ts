@@ -34,6 +34,7 @@ import { WorkOrdersModule } from './work-orders/work-orders.module';
 import { LogisticsModule } from './logistics/logistics.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { ComplaintsModule } from './complaints/complaints.module';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { ComplaintsModule } from './complaints/complaints.module';
     LogisticsModule,
     VisitorsModule,
     ComplaintsModule,
+    ActivityLogModule,
   ],
 })
 export class AppModule {}
