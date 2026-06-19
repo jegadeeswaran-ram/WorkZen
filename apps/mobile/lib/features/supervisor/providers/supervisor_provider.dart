@@ -216,3 +216,119 @@ final complaintsProvider = StateNotifierProvider<ComplaintsNotifier,
   final dio = ref.watch(apiClientProvider);
   return ComplaintsNotifier(dio);
 });
+
+// ---------------------------------------------------------------------------
+// ActivityLog Model
+// ---------------------------------------------------------------------------
+
+class SiteActivityLog {
+  final String id;
+  final String siteId;
+  final String logDate;
+  final String workDone;
+  final int headcount;
+  final bool hasIncident;
+  final String? incidentType;
+  final String? incidentDesc;
+  final List<String> photoUrls;
+
+  const SiteActivityLog({
+    required this.id,
+    required this.siteId,
+    required this.logDate,
+    required this.workDone,
+    required this.headcount,
+    required this.hasIncident,
+    this.incidentType,
+    this.incidentDesc,
+    required this.photoUrls,
+  });
+
+  factory SiteActivityLog.fromJson(Map<String, dynamic> j) => SiteActivityLog(
+        id: j['id'] as String,
+        siteId: j['siteId'] as String,
+        logDate: j['logDate'] as String,
+        workDone: j['workDone'] as String,
+        headcount: j['headcount'] as int,
+        hasIncident: j['hasIncident'] as bool? ?? false,
+        incidentType: j['incidentType'] as String?,
+        incidentDesc: j['incidentDesc'] as String?,
+        photoUrls: (j['photoUrls'] as List?)?.cast<String>() ?? [],
+      );
+}
+
+// ---------------------------------------------------------------------------
+// ActivityLog Notifier
+// ---------------------------------------------------------------------------
+
+class ActivityLogNotifier
+    extends StateNotifier<AsyncValue<List<SiteActivityLog>>> {
+  ActivityLogNotifier(this._dio) : super(const AsyncValue.loading());
+  final Dio _dio;
+  SiteActivityLog? todayLog;
+
+  Future<void> load(String siteId) async {
+    state = const AsyncValue.loading();
+    try {
+      final res = await _dio.get(
+        '/activity-log',
+        queryParameters: {'siteId': siteId},
+      );
+      final list = (res.data['data'] as List)
+          .map((e) => SiteActivityLog.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = AsyncValue.data(list);
+      // also load today
+      try {
+        final todayRes = await _dio.get(
+          '/activity-log/today',
+          queryParameters: {'siteId': siteId},
+        );
+        todayLog = todayRes.data['data'] != null
+            ? SiteActivityLog.fromJson(
+                todayRes.data['data'] as Map<String, dynamic>)
+            : null;
+      } catch (_) {}
+    } catch (e, s) {
+      state = AsyncValue.error(e, s);
+    }
+  }
+
+  Future<String> uploadPhoto(String filePath, String tenantId) async {
+    final formData = FormData.fromMap({
+      'photo': await MultipartFile.fromFile(
+        filePath,
+        filename: filePath.split('/').last,
+      ),
+    });
+    final res =
+        await _dio.post('/activity-log/upload-photo', data: formData);
+    return res.data['data']['url'] as String;
+  }
+
+  Future<void> save({
+    required String siteId,
+    required String workDone,
+    required int headcount,
+    required bool hasIncident,
+    String? incidentType,
+    String? incidentDesc,
+    List<String> photoUrls = const [],
+  }) async {
+    await _dio.post('/activity-log', data: {
+      'siteId': siteId,
+      'workDone': workDone,
+      'headcount': headcount,
+      'hasIncident': hasIncident,
+      if (incidentType != null) 'incidentType': incidentType,
+      if (incidentDesc != null) 'incidentDesc': incidentDesc,
+      'photoUrls': photoUrls,
+    });
+  }
+}
+
+final activityLogProvider = StateNotifierProvider<ActivityLogNotifier,
+    AsyncValue<List<SiteActivityLog>>>((ref) {
+  final dio = ref.watch(apiClientProvider);
+  return ActivityLogNotifier(dio);
+});

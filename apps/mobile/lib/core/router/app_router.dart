@@ -16,6 +16,7 @@ import '../../features/supervisor/screens/leave_approvals_screen.dart';
 import '../../features/supervisor/screens/team_attendance_screen.dart';
 import '../../features/supervisor/screens/complaints_screen.dart';
 import '../../features/supervisor/screens/new_complaint_screen.dart';
+import '../../features/supervisor/screens/activity_log_screen.dart';
 import '../providers/auth_provider.dart';
 
 // Listens to auth state changes and notifies GoRouter to re-run redirect.
@@ -78,6 +79,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (ctx, state) {
               final siteId = state.extra as String? ?? '';
               return NewComplaintScreen(siteId: siteId);
+            },
+          ),
+          GoRoute(
+            path: '/supervisor/activity',
+            builder: (ctx, state) {
+              final siteId = state.extra as String? ?? '';
+              return ActivityLogScreen(siteId: siteId);
             },
           ),
         ],

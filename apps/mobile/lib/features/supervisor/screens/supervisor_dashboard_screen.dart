@@ -130,7 +130,14 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(child: SizedBox()),
+                  Expanded(
+                    child: _ActionCard(
+                      label: 'Activity\nLog',
+                      icon: Icons.assignment_outlined,
+                      color: Colors.blue,
+                      onTap: () => context.push('/supervisor/activity', extra: ''),
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   const Expanded(child: SizedBox()),
                 ],
