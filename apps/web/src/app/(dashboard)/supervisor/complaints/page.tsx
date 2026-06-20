@@ -31,10 +31,17 @@ export default function ComplaintsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const qc = useQueryClient();
 
-  const { data: complaints = [], isLoading } = useQuery({
+  const { data: rawComplaints, isLoading } = useQuery({
     queryKey: ['complaints'],
-    queryFn: () => complaintsApi.list().then(r => r.data.data),
+    queryFn: () => complaintsApi.list().then(r => {
+      // Handle both single-wrap { data: [...] } and legacy double-wrap { data: { data: [...] } }
+      const d = r.data?.data;
+      if (Array.isArray(d)) return d;
+      if (d && Array.isArray((d as any).data)) return (d as any).data;
+      return [];
+    }),
   });
+  const complaints: any[] = Array.isArray(rawComplaints) ? rawComplaints : [];
 
   const updateMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => complaintsApi.update(id, { status }),
