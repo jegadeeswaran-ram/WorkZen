@@ -143,7 +143,7 @@ export class DeploymentService {
       if (!user) throw new NotFoundException('Supervisor not found or does not have SITE_SUPERVISOR role');
     }
     return this.prisma.site.update({
-      where: { id: siteId },
+      where: { id: siteId, tenantId },
       data: { supervisorId },
       include: { supervisor: { select: { id: true, firstName: true, lastName: true, email: true } } },
     });
