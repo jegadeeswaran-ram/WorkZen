@@ -80,6 +80,7 @@ const navGroups: NavGroup[] = [
       { label: 'Sites Overview', href: '/supervisor/sites', icon: MapPin, roles: ['SITE_SUPERVISOR', 'HR_MANAGER', 'OPERATIONS_MANAGER'] },
       { label: 'Complaints', href: '/supervisor/complaints', icon: AlertCircle, roles: ['SITE_SUPERVISOR', 'HR_MANAGER'] },
       { label: 'Activity Log', href: '/supervisor/activity', icon: ClipboardList, roles: ['SITE_SUPERVISOR', 'HR_MANAGER'] },
+      { label: 'Site Management', href: '/deployment/site-management', icon: Building2, roles: ['SUPER_ADMIN', 'COMPANY_OWNER', 'HR_MANAGER', 'OPERATIONS_MANAGER'] },
     ],
     roles: ['SITE_SUPERVISOR', 'HR_MANAGER', 'OPERATIONS_MANAGER'],
   },
