@@ -171,7 +171,7 @@ export class AttendanceService {
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
-    return { success: true, data, message: 'Team leave requests fetched' };
+    return { data, meta: { total: data.length } };
   }
 
   async getTodayAttendance(tenantId: string) {

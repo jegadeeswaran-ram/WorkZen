@@ -13,44 +13,40 @@ export class ActivityLogController {
   constructor(private readonly activityLogService: ActivityLogService) {}
 
   @Get()
-  async findAll(
+  findAll(
     @TenantId() tenantId: string,
     @Query('siteId') siteId: string,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
   ) {
-    const data = await this.activityLogService.findAll(tenantId, siteId, startDate, endDate);
-    return { success: true, data, message: 'Activity logs fetched' };
+    return this.activityLogService.findAll(tenantId, siteId, startDate, endDate);
   }
 
   @Get('today')
-  async findToday(
+  findToday(
     @TenantId() tenantId: string,
     @CurrentUser('id') supervisorId: string,
     @Query('siteId') siteId: string,
   ) {
-    const data = await this.activityLogService.findToday(tenantId, supervisorId, siteId);
-    return { success: true, data, message: "Today's log fetched" };
+    return this.activityLogService.findToday(tenantId, supervisorId, siteId);
   }
 
   @Post()
-  async upsert(
+  upsert(
     @TenantId() tenantId: string,
     @CurrentUser('id') supervisorId: string,
     @Body() dto: CreateActivityLogDto,
   ) {
-    const data = await this.activityLogService.upsert(tenantId, supervisorId, dto);
-    return { success: true, data, message: 'Activity log saved' };
+    return this.activityLogService.upsert(tenantId, supervisorId, dto);
   }
 
   @Patch(':id')
-  async partialUpdate(
+  partialUpdate(
     @TenantId() tenantId: string,
     @Param('id') id: string,
     @Body() dto: CreateActivityLogDto,
   ) {
-    const data = await this.activityLogService.partialUpdate(tenantId, id, dto);
-    return { success: true, data, message: 'Activity log updated' };
+    return this.activityLogService.partialUpdate(tenantId, id, dto);
   }
 
   @Post('upload-photo')
@@ -60,6 +56,7 @@ export class ActivityLogController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const url = await this.activityLogService.uploadPhoto(tenantId, file);
-    return { success: true, data: { url }, message: 'Photo uploaded' };
+    // Return with meta so interceptor spreads rather than double-wraps
+    return { data: { url }, meta: {} };
   }
 }

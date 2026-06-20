@@ -8,7 +8,7 @@ import { MapPin, Users, UserCheck, Phone } from 'lucide-react';
 export default function SupervisorSitesPage() {
   const { data: sites, isLoading } = useQuery({
     queryKey: ['sites'],
-    queryFn: () => api.get('/api/v1/deployment/sites').then(r => r.data.data),
+    queryFn: () => api.get('/deployment/sites').then(r => r.data.data),
   });
 
   if (isLoading) return (
