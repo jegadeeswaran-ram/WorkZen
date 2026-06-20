@@ -77,7 +77,7 @@ export class DeploymentService {
     if (!site) throw new NotFoundException('Site not found');
     if (supervisorId) {
       const user = await this.prisma.user.findFirst({
-        where: { id: supervisorId, tenantId, userRoles: { some: { role: { name: 'SITE_SUPERVISOR' } } } },
+        where: { id: supervisorId, tenantId, deletedAt: null, userRoles: { some: { role: { name: 'SITE_SUPERVISOR' } } } },
       });
       if (!user) throw new NotFoundException('Supervisor not found or does not have SITE_SUPERVISOR role');
     }
