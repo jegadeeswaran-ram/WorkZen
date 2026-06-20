@@ -66,7 +66,7 @@ export function AssignSupervisorDialog({ open, onOpenChange, site, onSuccess }: 
               <SelectTrigger className="mt-1.5 w-full">
                 <SelectValue placeholder="Select a supervisor..." />
               </SelectTrigger>
-              <SelectContent position="popper">
+              <SelectContent>
                 {supervisors.map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>
                     <div className="flex flex-col">
