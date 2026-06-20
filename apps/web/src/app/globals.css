@@ -250,6 +250,16 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 0 20px rgba(99, 102, 241, 0.08);
   }
 
+  /* === SHEET / DRAWER SOLID BACKGROUND === */
+  [data-slot="sheet-content"] {
+    background-color: #ffffff !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+  }
+  .dark [data-slot="sheet-content"] {
+    background-color: #0d1628 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
   /* Light mode card shadow */
   :root .glass-card,
   html:not(.dark) .glass-card {
