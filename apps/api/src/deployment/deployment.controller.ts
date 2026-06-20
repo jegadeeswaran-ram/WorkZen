@@ -14,6 +14,9 @@ import { PaginationDto } from '../common/dto/pagination.dto';
 export class DeploymentController {
   constructor(private service: DeploymentService) {}
 
+  @Get('supervisors') @RequirePermissions('deployment:read')
+  listSupervisors(@TenantId() t: string) { return this.service.listSupervisors(t); }
+
   @Get('sites') @RequirePermissions('deployment:read')
   getSites(@TenantId() t: string) { return this.service.getSites(t); }
 
@@ -25,6 +28,11 @@ export class DeploymentController {
   @Patch('sites/:id') @RequirePermissions('deployment:write')
   updateSite(@TenantId() t: string, @Param('id') id: string, @Body() dto: any) {
     return this.service.updateSite(t, id, dto);
+  }
+
+  @Patch('sites/:id/supervisor') @RequirePermissions('deployment:write')
+  assignSupervisor(@TenantId() t: string, @Param('id') id: string, @Body('supervisorId') supervisorId: string | null) {
+    return this.service.assignSupervisor(t, id, supervisorId ?? null);
   }
 
   @Get('shifts') @RequirePermissions('deployment:read')

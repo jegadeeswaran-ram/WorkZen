@@ -47,6 +47,47 @@ export class DeploymentService {
     });
   }
 
+  async listSupervisors(tenantId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        userRoles: {
+          some: {
+            role: { name: 'SITE_SUPERVISOR' },
+          },
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        supervisedSites: {
+          where: { tenantId, isActive: true },
+          select: { id: true, name: true, code: true },
+        },
+      },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+    });
+  }
+
+  async assignSupervisor(tenantId: string, siteId: string, supervisorId: string | null) {
+    const site = await this.prisma.site.findFirst({ where: { id: siteId, tenantId } });
+    if (!site) throw new NotFoundException('Site not found');
+    if (supervisorId) {
+      const user = await this.prisma.user.findFirst({
+        where: { id: supervisorId, tenantId, userRoles: { some: { role: { name: 'SITE_SUPERVISOR' } } } },
+      });
+      if (!user) throw new NotFoundException('Supervisor not found or does not have SITE_SUPERVISOR role');
+    }
+    return this.prisma.site.update({
+      where: { id: siteId },
+      data: { supervisorId },
+      include: { supervisor: { select: { id: true, firstName: true, lastName: true, email: true } } },
+    });
+  }
+
   async createSite(tenantId: string, dto: Record<string, unknown>, _userId: string) {
     return this.prisma.site.create({
       data: { ...dto, tenantId } as any,
