@@ -260,6 +260,22 @@
     border-color: rgba(255, 255, 255, 0.08) !important;
   }
 
+  /* === SELECT / COMBOBOX DROPDOWN SOLID BACKGROUND === */
+  [data-slot="select-content"] {
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  }
+  .dark [data-slot="select-content"] {
+    background-color: #111c33 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0 !important;
+  }
+  /* Also fix the scroll buttons inside dark selects */
+  .dark [data-slot="select-scroll-up-button"],
+  .dark [data-slot="select-scroll-down-button"] {
+    background-color: #111c33 !important;
+  }
+
   /* Light mode card shadow */
   :root .glass-card,
   html:not(.dark) .glass-card {
