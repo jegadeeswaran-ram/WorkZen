@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -20,6 +20,10 @@ export function AssignSupervisorDialog({ open, onOpenChange, site, onSuccess }: 
   const [selectedId, setSelectedId] = useState<string>(site.supervisorId ?? '');
   const qc = useQueryClient();
 
+  useEffect(() => {
+    setSelectedId(site.supervisorId ?? '');
+  }, [site.id, site.supervisorId]);
+
   const { data: supervisors = [], isLoading } = useQuery({
     queryKey: ['supervisors'],
     queryFn: () => api.get('/deployment/supervisors').then(r => {
@@ -32,14 +36,14 @@ export function AssignSupervisorDialog({ open, onOpenChange, site, onSuccess }: 
   const mutation = useMutation({
     mutationFn: (supervisorId: string | null) =>
       api.patch(`/deployment/sites/${site.id}/supervisor`, { supervisorId }),
-    onSuccess: () => {
+    onSuccess: (_, supervisorId) => {
       qc.invalidateQueries({ queryKey: ['sites'] });
       qc.invalidateQueries({ queryKey: ['site-team', site.id] });
-      toast.success('Supervisor assigned successfully');
+      toast.success(supervisorId ? 'Supervisor assigned successfully' : 'Supervisor removed');
       onSuccess();
       onOpenChange(false);
     },
-    onError: () => toast.error('Failed to assign supervisor'),
+    onError: () => toast.error('Failed to update supervisor'),
   });
 
   return (
@@ -107,7 +111,7 @@ export function AssignSupervisorDialog({ open, onOpenChange, site, onSuccess }: 
           )}
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button
-            onClick={() => mutation.mutate(selectedId || null)}
+            onClick={() => mutation.mutate(selectedId)}
             disabled={mutation.isPending || !selectedId}
           >
             {mutation.isPending ? 'Saving...' : 'Assign'}
