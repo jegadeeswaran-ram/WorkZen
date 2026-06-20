@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
@@ -46,6 +46,19 @@ export class DeploymentController {
 
   @Get('my-team') @RequirePermissions('deployment:read')
   myTeam(@TenantId() t: string, @CurrentUser('id') uid: string) { return this.service.getSupervisorTeam(t, uid); }
+
+  @Get('sites/:id/team') @RequirePermissions('deployment:read')
+  getSiteTeam(@TenantId() t: string, @Param('id') id: string) { return this.service.getSiteTeam(t, id); }
+
+  @Post('sites/:id/team') @RequirePermissions('deployment:write')
+  assignEmployee(@TenantId() t: string, @Param('id') id: string, @Body() dto: { employeeId: string; shiftId?: string; startDate?: string }) {
+    return this.service.assignEmployeeToSite(t, id, dto);
+  }
+
+  @Delete('sites/:id/team/:deploymentId') @RequirePermissions('deployment:write')
+  removeEmployee(@TenantId() t: string, @Param('id') id: string, @Param('deploymentId') deploymentId: string) {
+    return this.service.removeEmployeeFromSite(t, id, deploymentId);
+  }
 
   @Get() @RequirePermissions('deployment:read')
   getAll(@TenantId() t: string, @Query() q: PaginationDto) { return this.service.getDeployments(t, q); }

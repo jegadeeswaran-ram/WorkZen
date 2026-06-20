@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
 import { PaginationDto, paginate, buildPaginatedResponse } from '../common/dto/pagination.dto';
 
@@ -70,6 +70,67 @@ export class DeploymentService {
       },
       orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
     });
+  }
+
+  async getSiteTeam(tenantId: string, siteId: string) {
+    const site = await this.prisma.site.findFirst({
+      where: { id: siteId, tenantId },
+      select: { id: true, name: true, code: true, supervisor: { select: { id: true, firstName: true, lastName: true } } },
+    });
+    if (!site) throw new NotFoundException('Site not found');
+    const data = await this.prisma.deployment.findMany({
+      where: { tenantId, siteId, status: 'ACTIVE', deletedAt: null },
+      include: {
+        employee: {
+          select: {
+            id: true, firstName: true, lastName: true, employeeCode: true,
+            personalPhone: true,
+            designation: { select: { name: true } },
+            department: { select: { name: true } },
+          },
+        },
+        shift: { select: { id: true, name: true, startTime: true, endTime: true } },
+      },
+      orderBy: { startDate: 'asc' },
+    });
+    return { data, meta: { siteId, siteName: site.name, supervisor: site.supervisor, total: data.length } };
+  }
+
+  async assignEmployeeToSite(tenantId: string, siteId: string, dto: { employeeId: string; shiftId?: string; startDate?: string }) {
+    const site = await this.prisma.site.findFirst({ where: { id: siteId, tenantId } });
+    if (!site) throw new NotFoundException('Site not found');
+    // Check employee not already active at this site
+    const existing = await this.prisma.deployment.findFirst({
+      where: { tenantId, siteId, employeeId: dto.employeeId, status: 'ACTIVE' },
+    });
+    if (existing) throw new BadRequestException('Employee is already deployed to this site');
+    return this.prisma.deployment.create({
+      data: {
+        tenantId,
+        siteId,
+        employeeId: dto.employeeId,
+        shiftId: dto.shiftId ?? null,
+        startDate: dto.startDate ? new Date(dto.startDate) : new Date(),
+        status: 'ACTIVE',
+        reportingManager: site.supervisorId ?? undefined,
+      } as any,
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true, designation: { select: { name: true } } } },
+        shift: { select: { id: true, name: true } },
+      },
+    });
+  }
+
+  async removeEmployeeFromSite(tenantId: string, siteId: string, deploymentId: string) {
+    const dep = await this.prisma.deployment.findFirst({
+      where: { id: deploymentId, tenantId, siteId, status: 'ACTIVE' },
+    });
+    if (!dep) throw new NotFoundException('Active deployment not found');
+    await this.prisma.deployment.update({
+      where: { id: deploymentId },
+      data: { status: 'COMPLETED', endDate: new Date() },
+    });
+    return { message: 'Employee removed from site' };
   }
 
   async assignSupervisor(tenantId: string, siteId: string, supervisorId: string | null) {
