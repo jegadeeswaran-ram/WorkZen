@@ -26,14 +26,17 @@ export function AssignEmployeeSheet({ open, onOpenChange, siteId, siteName, onSu
   const [shiftId, setShiftId] = useState('');
   const qc = useQueryClient();
 
-  const { data: employees = [] } = useQuery({
+  const { data: employees = [], isLoading: empsLoading } = useQuery({
     queryKey: ['employees-for-assignment'],
     queryFn: () =>
-      api.get('/employees?status=ACTIVE&limit=200').then(r => {
+      api.get('/employees?limit=200').then(r => {
         const d = r.data?.data;
-        return Array.isArray(d) ? d : Array.isArray((d as any)?.data) ? (d as any).data : [];
+        const arr = Array.isArray(d) ? d : Array.isArray((d as any)?.data) ? (d as any).data : [];
+        // Filter active employees client-side (status param is not in PaginationDto whitelist)
+        return arr.filter((e: any) => e.status === 'ACTIVE' || !e.status);
       }),
     enabled: open,
+    staleTime: 30_000,
   });
 
   const { data: shifts = [] } = useQuery({
@@ -92,18 +95,25 @@ export function AssignEmployeeSheet({ open, onOpenChange, siteId, siteName, onSu
             <Label>Search Employee</Label>
             <div className="relative mt-1.5">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+              <input
+                type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Name or employee code..."
-                className="pl-9"
+                className="h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 pl-9 text-sm text-foreground placeholder:text-muted-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
               />
             </div>
           </div>
 
           {/* Employee List */}
           <div className="max-h-52 overflow-y-auto rounded-lg border divide-y">
-            {filtered.slice(0, 30).map((emp: any) => (
+            {empsLoading ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading employees...
+              </div>
+            ) : null}
+            {!empsLoading && filtered.slice(0, 30).map((emp: any) => (
               <button
                 key={emp.id}
                 type="button"
@@ -127,7 +137,7 @@ export function AssignEmployeeSheet({ open, onOpenChange, siteId, siteName, onSu
                 )}
               </button>
             ))}
-            {filtered.length === 0 && (
+            {!empsLoading && filtered.length === 0 && (
               <p className="px-3 py-4 text-sm text-muted-foreground text-center">
                 No employees found
               </p>
