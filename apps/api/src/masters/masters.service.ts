@@ -83,7 +83,7 @@ export class MastersService {
     return this.prisma.holiday.findMany({ where, orderBy: { date: 'asc' } });
   }
   async createHoliday(tenantId: string, dto: { name: string; date: string; type: string; isOptional?: boolean; applicableTo?: string }, userId: string) {
-    return this.prisma.holiday.create({ data: { tenantId, ...dto, date: new Date(dto.date), createdBy: userId } as any });
+    return this.prisma.holiday.create({ data: { tenantId, name: dto.name, date: new Date(dto.date), type: dto.type, isOptional: dto.isOptional ?? false } });
   }
   async updateHoliday(tenantId: string, id: string, dto: Record<string, unknown>) {
     const rec = await this.prisma.holiday.findFirst({ where: { id, tenantId } });

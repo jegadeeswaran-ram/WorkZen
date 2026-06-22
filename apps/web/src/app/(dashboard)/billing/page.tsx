@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_BILLING_DASH, DUMMY_INVOICES_DATA, DUMMY_BILLING_AGING, DUMMY_BILLING_DSO } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -214,13 +215,14 @@ export default function BillingPage() {
   const now = new Date();
 
   // ── Queries ──────────────────────────────────────────────────────
-  const { data: dash } = useQuery({ queryKey: ['billing-dash'], queryFn: billingApi.dashboard });
+  const { data: dash } = useQuery({ queryKey: ['billing-dash'], queryFn: billingApi.dashboard, placeholderData: DUMMY_BILLING_DASH });
 
   const { data: agingData, isLoading: agingLoading } = useQuery({
     queryKey: ['billing-aging'],
     queryFn: billingApi.getAgingAnalysis,
     enabled: tab === 'dashboard',
     staleTime: 5 * 60 * 1000,
+    placeholderData: DUMMY_BILLING_AGING,
   });
 
   const { data: dsoData, isLoading: dsoLoading } = useQuery({
@@ -228,6 +230,7 @@ export default function BillingPage() {
     queryFn: billingApi.getDso,
     enabled: tab === 'dashboard',
     staleTime: 5 * 60 * 1000,
+    placeholderData: DUMMY_BILLING_DSO,
   });
 
   const { data: invoicesData, isLoading: loadInvoices } = useQuery({
@@ -240,6 +243,7 @@ export default function BillingPage() {
       dateTo: dateTo || undefined,
     }),
     enabled: tab === 'invoices',
+    placeholderData: DUMMY_INVOICES_DATA,
   });
 
   const { data: clientsList = [] } = useQuery({
@@ -254,7 +258,7 @@ export default function BillingPage() {
     enabled: showInvoiceModal,
   });
 
-  const invoices: any[] = (invoicesData as any)?.data ?? [];
+  const invoices: any[] = (invoicesData as any)?.data?.length ? (invoicesData as any).data : DUMMY_INVOICES_DATA.data;
   const invoicesMeta = (invoicesData as any)?.meta;
 
   // ── Forms ────────────────────────────────────────────────────────

@@ -28,9 +28,13 @@ class ProfileScreen extends ConsumerWidget {
             error: (_, __) => CircleAvatar(
               radius: 44,
               backgroundColor: AppTheme.primary.withOpacity(0.15),
-              child: Text((user?.name ?? 'U')[0],
-                  style: const TextStyle(
-                      fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+              child: Text(
+                      (empAsync.value?.fullName.isNotEmpty == true
+                              ? empAsync.value!.fullName
+                              : (user?.name ?? 'U'))[0]
+                          .toUpperCase(),
+                      style: const TextStyle(
+                          fontSize: 32, fontWeight: FontWeight.bold, color: AppTheme.primary)),
             ),
             data: (emp) => CircleAvatar(
               radius: 44,
@@ -44,8 +48,12 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(user?.name ?? 'Employee',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 20)),
+          Text(
+            empAsync.value?.fullName.isNotEmpty == true
+                ? empAsync.value!.fullName
+                : (user?.name ?? 'Employee'),
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontSize: 20),
+          ),
           Text(user?.email ?? '', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 4),
           empAsync.maybeWhen(

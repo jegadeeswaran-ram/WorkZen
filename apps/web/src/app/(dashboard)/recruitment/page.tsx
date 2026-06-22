@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_REQUISITIONS_DATA, DUMMY_CANDIDATES_DATA } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -126,6 +127,7 @@ export default function RecruitmentPage() {
         page: reqPage,
         limit: 10,
       }),
+    placeholderData: DUMMY_REQUISITIONS_DATA,
   });
 
   const { data: candData, isLoading: candLoading } = useQuery({
@@ -137,6 +139,7 @@ export default function RecruitmentPage() {
         page: candPage,
         limit: 10,
       }),
+    placeholderData: DUMMY_CANDIDATES_DATA,
   });
 
   const { data: openReqData } = useQuery({
@@ -155,9 +158,9 @@ export default function RecruitmentPage() {
     queryFn: recruitmentApi.allOpenRequisitions,
   });
 
-  const reqs: Record<string, unknown>[] = reqData?.data ?? [];
+  const reqs: Record<string, unknown>[] = reqData?.data?.length ? reqData.data : (DUMMY_REQUISITIONS_DATA.data as any);
   const reqMeta = reqData?.meta;
-  const candidates: Record<string, unknown>[] = candData?.data ?? [];
+  const candidates: Record<string, unknown>[] = candData?.data?.length ? candData.data : (DUMMY_CANDIDATES_DATA.data as any);
   const candMeta = candData?.meta;
 
   // KPI derived values

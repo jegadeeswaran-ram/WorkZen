@@ -48,6 +48,14 @@ final supervisorTeamProvider =
   return _parseList(r.data);
 });
 
+// Extracts siteId from the my-team response meta — used for complaints & activity log
+final supervisorSiteIdProvider = FutureProvider.autoDispose<String>((ref) async {
+  final api = ref.watch(apiClientProvider);
+  final r = await api.get('/deployment/my-team');
+  final meta = r.data['meta'] as Map<String, dynamic>?;
+  return meta?['siteId'] as String? ?? '';
+});
+
 // ---------------------------------------------------------------------------
 // Today's attendance for the supervisor's team
 // Fields per item: employeeId, status, checkInTime, checkOutTime,

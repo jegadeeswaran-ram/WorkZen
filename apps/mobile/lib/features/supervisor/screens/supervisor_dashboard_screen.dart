@@ -28,6 +28,7 @@ class SupervisorDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final statsAsync = ref.watch(supervisorDashboardStatsProvider);
+    final siteId = ref.watch(supervisorSiteIdProvider).value ?? '';
     final pendingAsync = ref.watch(pendingLeaveRequestsProvider);
 
     return Scaffold(
@@ -126,7 +127,7 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                       label: 'Complaints',
                       icon: Icons.report_problem_outlined,
                       color: Colors.orange,
-                      onTap: () => context.push('/supervisor/complaints', extra: ''),
+                      onTap: () => context.push('/supervisor/complaints', extra: siteId),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -135,7 +136,7 @@ class SupervisorDashboardScreen extends ConsumerWidget {
                       label: 'Activity\nLog',
                       icon: Icons.assignment_outlined,
                       color: Colors.blue,
-                      onTap: () => context.push('/supervisor/activity', extra: ''),
+                      onTap: () => context.push('/supervisor/activity', extra: siteId),
                     ),
                   ),
                   const SizedBox(width: 12),

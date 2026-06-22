@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Plus, Search, Building2, Users, Phone, Mail,
@@ -23,6 +24,7 @@ const TYPE_COLORS: Record<string, { color: string; bg: string; short: string }> 
 };
 
 export default function ClientsPage() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
@@ -30,6 +32,10 @@ export default function ClientsPage() {
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [activeTab, setActiveTab] = useState<'clients' | 'masters' | 'contacts' | 'rate-master'>('clients');
   const qc = useQueryClient();
+
+  useEffect(() => {
+    if (searchParams.get('create') === 'true') setShowModal(true);
+  }, [searchParams]);
 
   const { data: dash } = useQuery({ queryKey: ['clients-dash'], queryFn: clientsApi.dashboard });
   const { data: clientsAll = [] } = useQuery({ queryKey: ['clients-select-all'], queryFn: clientsApi.selectAll });

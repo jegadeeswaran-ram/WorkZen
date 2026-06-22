@@ -114,6 +114,62 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
     );
   }
 
+  Widget _buildStatsBanner({
+    required List<Map<String, dynamic>> team,
+    required List<Map<String, dynamic>> attendance,
+  }) {
+    final attMap = <String, String>{
+      for (final a in attendance)
+        if (a['employeeId'] != null)
+          a['employeeId'].toString(): (a['status'] as String? ?? 'ABSENT'),
+    };
+    final total = team.length;
+    int present = 0, absent = 0, onLeave = 0, late = 0;
+    for (final emp in team) {
+      final empId = (emp['employeeId'] ??
+              (emp['employee'] as Map<String, dynamic>?)?['id'])
+          ?.toString();
+      final status = empId != null ? attMap[empId] : null;
+      switch ((status ?? 'ABSENT').toUpperCase()) {
+        case 'PRESENT': present++; break;
+        case 'LATE':    late++;    break;
+        case 'LEAVE':
+        case 'HALF_DAY': onLeave++; break;
+        default:        absent++;
+      }
+    }
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 10, 12, 2),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.surface, borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+        _statCell('Total',   '$total',   AppTheme.primary),
+        _divider(),
+        _statCell('Present', '$present', AppTheme.success),
+        _divider(),
+        _statCell('Absent',  '$absent',  AppTheme.danger),
+        _divider(),
+        _statCell('Leave',   '$onLeave', AppTheme.warning),
+        _divider(),
+        _statCell('Late',    '$late',    const Color(0xFFFF6B35)),
+      ]),
+    );
+  }
+
+  Widget _statCell(String label, String value, Color color) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(value, style: TextStyle(color: color, fontSize: 18, fontWeight: FontWeight.w800)),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(color: AppTheme.textMuted, fontSize: 10)),
+    ],
+  );
+
+  Widget _divider() => Container(width: 1, height: 30, color: AppTheme.border);
+
   Widget _buildFilterChips() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -310,6 +366,11 @@ class _TeamAttendanceScreenState extends ConsumerState<TeamAttendanceScreen> {
       ),
       body: Column(
         children: [
+          // ── Today's stats banner ───────────────────────────────────
+          if (!isLoading && !hasError) _buildStatsBanner(
+            team: teamAsync.value ?? [],
+            attendance: attendanceAsync.value ?? [],
+          ),
           _buildFilterChips(),
           Expanded(
             child: RefreshIndicator(

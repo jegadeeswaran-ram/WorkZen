@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, ChevronRight, Calendar, Users, Shield,
-  CreditCard, Gift, Clock, AlertTriangle, X, MapPin,
-  CheckCircle2, FileText, Cake, Star,
+  CreditCard, Gift, Clock, X,
+  CheckCircle2, FileText, Cake, Star, Plus,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import {
@@ -43,11 +43,38 @@ function pad2(n: number) { return String(n).padStart(2, '0'); }
 function toYMD(d: Date) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
+const HOLIDAY_TYPES = ['NATIONAL', 'STATE', 'REGIONAL', 'OPTIONAL'] as const;
+
 export default function CalendarPage() {
   const [curYear,  setCurYear]  = useState(today.getFullYear());
   const [curMonth, setCurMonth] = useState(today.getMonth()); // 0-indexed
   const [selected, setSelected] = useState<string>(toYMD(today));
   const [filters,  setFilters]  = useState<Set<EventType>>(new Set());
+
+  // New Holiday modal
+  const [showNewHoliday, setShowNewHoliday] = useState(false);
+  const [newHoliday, setNewHoliday] = useState({ name: '', date: toYMD(today), type: 'NATIONAL', isOptional: false });
+  const [formErr, setFormErr] = useState('');
+
+  const qc = useQueryClient();
+  const createHolidayMutation = useMutation({
+    mutationFn: (data: typeof newHoliday) => mastersApi.createHoliday(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['holidays'] });
+      setShowNewHoliday(false);
+      setNewHoliday({ name: '', date: selected, type: 'NATIONAL', isOptional: false });
+      setFormErr('');
+    },
+    onError: (e: any) => setFormErr(e?.response?.data?.message ?? 'Failed to create holiday'),
+  });
+
+  const handleNewHolidaySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newHoliday.name.trim()) { setFormErr('Name is required'); return; }
+    if (!newHoliday.date) { setFormErr('Date is required'); return; }
+    setFormErr('');
+    createHolidayMutation.mutate(newHoliday);
+  };
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const { data: holidays = [] } = useQuery({
@@ -234,6 +261,10 @@ export default function CalendarPage() {
         <div className="flex items-center gap-3">
           <button onClick={() => { setCurYear(today.getFullYear()); setCurMonth(today.getMonth()); setSelected(toYMD(today)); }}
             className="btn-secondary text-sm">Today</button>
+          <button onClick={() => { setNewHoliday(h => ({ ...h, date: selected })); setShowNewHoliday(true); }}
+            className="btn-primary text-sm flex items-center gap-1.5">
+            <Plus size={14} /> New Holiday
+          </button>
         </div>
       </div>
 
@@ -508,6 +539,123 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+      {/* ── New Holiday Modal ── */}
+      {showNewHoliday && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowNewHoliday(false); }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.18 }}
+            className="w-full max-w-md rounded-2xl p-6"
+            style={{ background: 'var(--wz-card-bg)', border: '1px solid var(--wz-card-border)' }}>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <Star size={15} style={{ color: '#ef4444' }} />
+                </div>
+                <h3 className="text-base font-bold" style={{ color: 'var(--wz-text-primary)' }}>Add Holiday</h3>
+              </div>
+              <button onClick={() => setShowNewHoliday(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                style={{ background: 'var(--wz-input-bg)' }}>
+                <X size={14} style={{ color: 'var(--wz-text-muted)' }} />
+              </button>
+            </div>
+
+            <form onSubmit={handleNewHolidaySubmit} className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--wz-text-secondary)' }}>
+                  Holiday Name <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Republic Day"
+                  value={newHoliday.name}
+                  onChange={e => setNewHoliday(h => ({ ...h, name: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                  style={{ background: 'var(--wz-input-bg)', border: '1px solid var(--wz-card-border)', color: 'var(--wz-text-primary)' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--wz-card-border)'}
+                />
+              </div>
+
+              {/* Date */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--wz-text-secondary)' }}>
+                  Date <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  value={newHoliday.date}
+                  onChange={e => setNewHoliday(h => ({ ...h, date: e.target.value }))}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                  style={{ background: 'var(--wz-input-bg)', border: '1px solid var(--wz-card-border)', color: 'var(--wz-text-primary)' }}
+                  onFocus={e => e.target.style.borderColor = 'rgba(99,102,241,0.5)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--wz-card-border)'}
+                />
+              </div>
+
+              {/* Type */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--wz-text-secondary)' }}>Type</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {HOLIDAY_TYPES.map(t => (
+                    <button key={t} type="button"
+                      onClick={() => setNewHoliday(h => ({ ...h, type: t }))}
+                      className="px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+                      style={{
+                        background: newHoliday.type === t ? 'rgba(99,102,241,0.15)' : 'var(--wz-input-bg)',
+                        border: `1px solid ${newHoliday.type === t ? 'rgba(99,102,241,0.4)' : 'var(--wz-card-border)'}`,
+                        color: newHoliday.type === t ? '#818cf8' : 'var(--wz-text-secondary)',
+                      }}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Optional toggle */}
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div className="relative">
+                  <input type="checkbox" className="sr-only"
+                    checked={newHoliday.isOptional}
+                    onChange={e => setNewHoliday(h => ({ ...h, isOptional: e.target.checked }))} />
+                  <div className="w-10 h-5 rounded-full transition-colors"
+                    style={{ background: newHoliday.isOptional ? '#6366f1' : 'var(--wz-input-bg)', border: '1px solid var(--wz-card-border)' }}>
+                    <div className="w-4 h-4 rounded-full bg-white mt-0.5 transition-transform shadow-sm"
+                      style={{ transform: newHoliday.isOptional ? 'translateX(21px)' : 'translateX(1px)' }} />
+                  </div>
+                </div>
+                <span className="text-sm" style={{ color: 'var(--wz-text-secondary)' }}>Optional holiday</span>
+              </label>
+
+              {formErr && (
+                <p className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.2)' }}>
+                  {formErr}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowNewHoliday(false)}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+                  style={{ background: 'var(--wz-input-bg)', color: 'var(--wz-text-secondary)', border: '1px solid var(--wz-card-border)' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={createHolidayMutation.isPending}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg,#4f46e5,#6366f1)' }}>
+                  {createHolidayMutation.isPending ? 'Saving…' : 'Add Holiday'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  devIndicators: { buildActivity: false, appIsrStatus: false },
   experimental: {
     // Tree-shake large icon/animation libraries — only bundle icons actually imported
     optimizePackageImports: ['lucide-react', 'framer-motion'],

@@ -46,6 +46,7 @@ export const authApi = {
   register: (data: Record<string, string>) =>
     api.post('/auth/register', data).then((r) => r.data.data),
   logout: () => api.post('/auth/logout').then((r) => r.data),
+  me: () => api.get('/auth/me').then((r) => r.data.data as { firstName: string; lastName: string; email: string; userRoles: { role: { name: string } }[] }),
 };
 
 export const tendersApi = {

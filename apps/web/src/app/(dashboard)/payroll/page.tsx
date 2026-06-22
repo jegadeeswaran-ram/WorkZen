@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_PAYROLL_DASH, DUMMY_PAYROLL_RUNS, DUMMY_SALARY_STRUCTURES } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -122,18 +123,20 @@ export default function PayrollPage() {
   const [salaryTypeFilter, setSalaryTypeFilter] = useState('');
 
   // ── Queries ───────────────────────────────────────────────────────────────
-  const { data: dash } = useQuery({ queryKey: ['payroll-dashboard'], queryFn: payrollApi.dashboard, staleTime: 60_000 });
+  const { data: dash } = useQuery({ queryKey: ['payroll-dashboard'], queryFn: payrollApi.dashboard, staleTime: 60_000, placeholderData: DUMMY_PAYROLL_DASH });
 
   const { data: runsData, isLoading: runsLoading } = useQuery({
     queryKey: ['payroll-runs', runsPage],
     queryFn: () => payrollApi.runs({ page: runsPage, limit: 10 }),
     enabled: tab === 'runs' || tab === 'dashboard',
+    placeholderData: DUMMY_PAYROLL_RUNS,
   });
 
   const { data: salaryData, isLoading: salaryLoading } = useQuery({
     queryKey: ['salary-structures', salaryPage, salarySearch, salaryTypeFilter],
     queryFn: () => payrollApi.salaryStructures({ page: salaryPage, limit: 15, search: salarySearch || undefined, employmentType: salaryTypeFilter || undefined }),
     enabled: tab === 'salary',
+    placeholderData: DUMMY_SALARY_STRUCTURES,
   });
 
   const { data: allEmployees = [] } = useQuery({
@@ -195,9 +198,9 @@ export default function PayrollPage() {
     setShowSalaryModal(true);
   };
 
-  const runs: any[] = (runsData as any)?.data ?? [];
+  const runs: any[] = (runsData as any)?.data?.length ? (runsData as any).data : DUMMY_PAYROLL_RUNS.data;
   const runsMeta    = (runsData as any)?.meta;
-  const structures: any[] = (salaryData as any)?.data ?? [];
+  const structures: any[] = (salaryData as any)?.data?.length ? (salaryData as any).data : DUMMY_SALARY_STRUCTURES.data;
   const salaryMeta  = (salaryData as any)?.meta;
 
   // Live gross preview in salary form

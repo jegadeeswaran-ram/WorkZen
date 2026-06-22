@@ -17,6 +17,8 @@ import { useUiStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { authApi } from '@/lib/api';
 import type React from 'react';
 
 type NavItem = {
@@ -137,8 +139,15 @@ const billingFinancePaths = billingFinanceItems
 export function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed } = useUiStore();
-  const { clearAuth, roles } = useAuthStore();
+  const { clearAuth, roles, userId } = useAuthStore();
   const router = useRouter();
+  const { data: me } = useQuery({ queryKey: ['me', userId], queryFn: authApi.me, enabled: !!userId });
+
+  const displayName = me ? `${me.firstName} ${me.lastName}`.trim() : '…';
+  const initials = me ? `${me.firstName[0]}${me.lastName[0]}`.toUpperCase() : '..';
+  const displayRole = roles[0]
+    ? roles[0].replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    : 'User';
 
   // Helper function to check if user has required roles
   const hasRequiredRole = (requiredRoles?: string[]): boolean => {
@@ -369,11 +378,11 @@ export function Sidebar() {
             style={{ background: 'var(--wz-input-bg)', border: '1px solid var(--wz-input-border)' }}>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
               style={{ background: 'linear-gradient(135deg, #4f46e5, #8b5cf6)', color: 'white' }}>
-              JD
+              {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-medium truncate" style={{ color: 'var(--wz-text-primary)' }}>John Doe</div>
-              <div className="text-xs truncate" style={{ color: 'var(--wz-text-muted)' }}>Company Owner</div>
+              <div className="text-xs font-medium truncate" style={{ color: 'var(--wz-text-primary)' }}>{displayName}</div>
+              <div className="text-xs truncate" style={{ color: 'var(--wz-text-muted)' }}>{displayRole}</div>
             </div>
           </div>
         )}

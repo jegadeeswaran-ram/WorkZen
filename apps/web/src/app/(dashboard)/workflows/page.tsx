@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_APPROVALS, DUMMY_WORKFLOW_DEFINITIONS } from '@/lib/dummy-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, CheckCircle2, Clock, Check, X, ChevronRight, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -67,11 +68,13 @@ export default function WorkflowsPage() {
   const { data: myApprovals, isLoading: approvalsLoading } = useQuery<Approval[]>({
     queryKey: ['my-approvals'],
     queryFn: workflowsApi.myApprovals,
+    placeholderData: DUMMY_APPROVALS as any,
   });
 
   const { data: definitions, isLoading: definitionsLoading } = useQuery<WorkflowDefinition[]>({
     queryKey: ['workflow-definitions'],
     queryFn: workflowsApi.definitions,
+    placeholderData: DUMMY_WORKFLOW_DEFINITIONS as any,
   });
 
   const { mutate: takeAction, isPending: actioning } = useMutation({
@@ -91,8 +94,8 @@ export default function WorkflowsPage() {
     onError: () => toast.error('Failed to take action'),
   });
 
-  const approvalsList: Approval[] = myApprovals ?? [];
-  const definitionsList: WorkflowDefinition[] = definitions ?? [];
+  const approvalsList: Approval[] = myApprovals?.length ? myApprovals : (DUMMY_APPROVALS as any);
+  const definitionsList: WorkflowDefinition[] = definitions?.length ? definitions : (DUMMY_WORKFLOW_DEFINITIONS as any);
 
   return (
     <div className="space-y-6">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { DUMMY_FINANCE_DASH, DUMMY_REVENUE_CHART, DUMMY_AR_AGING } from '@/lib/dummy-data';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, DollarSign, AlertCircle,
@@ -94,16 +95,19 @@ export default function FinanceDashboardPage() {
   const { data: dashRaw, isLoading: dashLoading } = useQuery({
     queryKey: ['finance-dashboard'],
     queryFn: financeApi.dashboard,
+    placeholderData: DUMMY_FINANCE_DASH,
   });
 
   const { data: chartRaw, isLoading: chartLoading } = useQuery({
     queryKey: ['revenue-monthly-chart'],
     queryFn: () => revenueApi.getMonthlyChart(12),
+    placeholderData: DUMMY_REVENUE_CHART,
   });
 
   const { data: agingRaw, isLoading: agingLoading } = useQuery({
     queryKey: ['ar-aging'],
     queryFn: arApi.getAging,
+    placeholderData: DUMMY_AR_AGING,
   });
 
   // ── Normalise ──────────────────────────────────────────────────────────

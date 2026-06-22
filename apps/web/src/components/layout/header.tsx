@@ -1,10 +1,18 @@
 'use client';
 
-import { Bell, Search, Menu, Sun, Moon, Plus } from 'lucide-react';
+import { Bell, Search, Menu, Sun, Moon, Plus, FileText, Users, Building2, Receipt, Briefcase, X } from 'lucide-react';
 import { useUiStore } from '@/stores/ui.store';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useEffect, useState, useRef } from 'react';
+
+const QUICK_CREATE_ITEMS = [
+  { label: 'New Tender',    icon: FileText,   route: '/tenders?create=true',    color: '#818cf8' },
+  { label: 'New Client',    icon: Building2,  route: '/clients?create=true',    color: '#34d399' },
+  { label: 'New Employee',  icon: Users,      route: '/employees?create=true',  color: '#60a5fa' },
+  { label: 'New Invoice',   icon: Receipt,    route: '/billing?create=true',    color: '#f59e0b' },
+  { label: 'New Work Order',icon: Briefcase,  route: '/work-orders?create=true',color: '#f472b6' },
+];
 
 const pageTitles: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -42,7 +50,19 @@ export function Header() {
 
   const [mounted, setMounted] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
+  const quickCreateRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (quickCreateRef.current && !quickCreateRef.current.contains(e.target as Node)) {
+        setShowQuickCreate(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   useEffect(() => setMounted(true), []);
 
@@ -131,10 +151,44 @@ export function Header() {
       </button>
 
       {/* Quick create */}
-      <button className="btn-primary px-3 py-2">
-        <Plus size={15} />
-        <span className="hidden sm:block">New</span>
-      </button>
+      <div className="relative" ref={quickCreateRef}>
+        <button
+          className="btn-primary px-3 py-2"
+          onClick={() => setShowQuickCreate(v => !v)}
+        >
+          <Plus size={15} />
+          <span className="hidden sm:block">New</span>
+        </button>
+
+        {showQuickCreate && (
+          <div
+            className="absolute right-0 top-12 z-50 w-52 rounded-2xl overflow-hidden"
+            style={{ background: 'var(--wz-card-bg)', border: '1px solid var(--wz-card-border)', boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}
+          >
+            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--wz-text-muted)' }}>Quick Create</span>
+              <button onClick={() => setShowQuickCreate(false)} style={{ color: 'var(--wz-text-muted)' }}><X size={12} /></button>
+            </div>
+            {QUICK_CREATE_ITEMS.map(item => (
+              <button
+                key={item.route}
+                onClick={() => { router.push(item.route); setShowQuickCreate(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors text-left"
+                style={{ color: 'var(--wz-text-secondary)' }}
+                onMouseOver={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: `${item.color}18`, border: `1px solid ${item.color}30` }}>
+                  <item.icon size={13} style={{ color: item.color }} />
+                </div>
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            ))}
+            <div className="h-2" />
+          </div>
+        )}
+      </div>
     </header>
   );
 }

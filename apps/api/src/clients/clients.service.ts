@@ -40,12 +40,30 @@ export class ClientsService {
 
   async create(tenantId: string, dto: Record<string, unknown>, userId: string) {
     const code = `CLT${Date.now()}`;
-    return this.prisma.client.create({ data: { ...dto, tenantId, clientCode: code, createdBy: userId } as any });
+    const { address, city, state, pincode, contactName, contactPhone, contactEmail, contactDesignation, ...rest } = dto as any;
+    const addressJson = (address || city || state || pincode)
+      ? { street: address ?? '', city: city ?? '', state: state ?? '', pincode: pincode ?? '' }
+      : {};
+    const data: any = { ...rest, tenantId, clientCode: code, createdBy: userId, address: addressJson };
+    const client = await this.prisma.client.create({ data });
+    if (contactName) {
+      await this.prisma.clientContact.create({
+        data: { tenantId, clientId: client.id, name: contactName, phone: contactPhone ?? null, email: contactEmail ?? null, designation: contactDesignation ?? null, isPrimary: true },
+      });
+    }
+    return client;
   }
 
   async update(tenantId: string, id: string, dto: Record<string, unknown>, userId: string) {
     await this.findOne(tenantId, id);
-    return this.prisma.client.update({ where: { id }, data: { ...dto, updatedBy: userId } as any });
+    const { address, city, state, pincode, ...rest } = dto as any;
+    const updateData: any = { ...rest, updatedBy: userId };
+    if (address !== undefined || city !== undefined || state !== undefined || pincode !== undefined) {
+      const existing = await this.prisma.client.findFirst({ where: { id } });
+      const prev = (existing?.address as any) ?? {};
+      updateData.address = { ...prev, street: address ?? prev.street ?? '', city: city ?? prev.city ?? '', state: state ?? prev.state ?? '', pincode: pincode ?? prev.pincode ?? '' };
+    }
+    return this.prisma.client.update({ where: { id }, data: updateData });
   }
 
   async remove(tenantId: string, id: string) {

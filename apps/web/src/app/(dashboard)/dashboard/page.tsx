@@ -8,7 +8,8 @@ import {
   MapPin, ChevronRight, Calendar,
 } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { reportsApi, billingApi, workflowsApi } from '@/lib/api';
+import { reportsApi, billingApi, workflowsApi, authApi } from '@/lib/api';
+import { useAuthStore } from '@/stores/auth.store';
 import { AreaChart } from '@/components/charts/area-chart';
 import { DonutChart } from '@/components/charts/donut-chart';
 import { BarChart } from '@/components/charts/bar-chart';
@@ -56,12 +57,17 @@ const currentMonth = new Date().getMonth();
 const last6Months = Array.from({ length: 6 }, (_, i) => MONTHS[(currentMonth - 5 + i + 12) % 12]);
 
 export default function DashboardPage() {
+  const { userId } = useAuthStore();
+  const { data: me } = useQuery({ queryKey: ['me', userId], queryFn: authApi.me, enabled: !!userId });
   const { data: summary } = useQuery({ queryKey: ['summary'], queryFn: reportsApi.summary });
   const { data: billingDash } = useQuery({ queryKey: ['billing-dash'], queryFn: billingApi.dashboard });
   const { data: approvals = [] } = useQuery({
     queryKey: ['dashboard-approvals'],
     queryFn: workflowsApi.myApprovals,
   });
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const recentActivities = [
     { action: 'New employee joined', name: 'Rajesh Kumar', time: '2 min ago', type: 'employee', color: '#10b981' },
@@ -95,7 +101,7 @@ export default function DashboardPage() {
         <div className="relative z-10 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold mb-1" style={{ fontFamily: 'Plus Jakarta Sans', color: 'var(--wz-text-primary)' }}>
-              Good morning, John 👋
+              {greeting}, {me?.firstName ?? 'there'} 👋
             </h2>
             <p style={{ color: 'var(--wz-text-muted)', fontSize: '0.9rem' }}>
               Here's what's happening with your operations today.

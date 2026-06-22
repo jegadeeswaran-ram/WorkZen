@@ -32,19 +32,21 @@ interface Props { open: boolean; onClose: () => void; tender?: Record<string, an
 export function CreateTenderModal({ open, onClose, tender, clientsAll = [] }: Props) {
   const qc = useQueryClient();
 
-  // Always fetch fresh when modal opens — never rely on stale cache
   const { data: fetchedClients, isLoading: clientsLoading, isError: clientsError, refetch: refetchClients } = useQuery({
     queryKey: ['clients-select-all'],
     queryFn: clientsApi.selectAll,
-    staleTime: 0,
-    refetchOnMount: true,
+    staleTime: 5 * 60_000,
+    retry: 2,
     enabled: open,
   });
 
-  // Use freshly fetched data; fall back to pre-loaded prop while loading
-  const clients: any[] = (fetchedClients && (fetchedClients as any[]).length > 0)
+  // Merge fetched + prop fallback; prop comes from the page's own pre-load
+  const clients: any[] = (fetchedClients as any[] | undefined)?.length
     ? (fetchedClients as any[])
     : clientsAll;
+
+  // Only show error/loading state when we truly have no clients to display
+  const noData = clients.length === 0;
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -145,14 +147,20 @@ export function CreateTenderModal({ open, onClose, tender, clientsAll = [] }: Pr
             <F label="Client / Department">
               <div className="relative">
                 <select {...register('departmentId')} className="input-field w-full pr-8"
-                  disabled={clientsLoading}>
+                  disabled={clientsLoading && noData}>
                   <option value="">
-                    {clientsLoading ? 'Loading clients…' : clientsError ? 'Error loading clients' : clients.length === 0 ? 'No clients — create one in Masters tab' : 'Select client'}
+                    {clientsLoading && noData
+                      ? 'Loading clients…'
+                      : clientsError && noData
+                      ? 'Error loading clients'
+                      : noData
+                      ? 'No clients — create one first'
+                      : 'Select client'}
                   </option>
                   {clients.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-                {clientsLoading && <Loader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin" style={{ color: 'var(--wz-text-muted)', pointerEvents: 'none' }} />}
-                {clientsError && !clientsLoading && (
+                {clientsLoading && noData && <Loader2 size={13} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin" style={{ color: 'var(--wz-text-muted)', pointerEvents: 'none' }} />}
+                {clientsError && noData && !clientsLoading && (
                   <button type="button" onClick={() => refetchClients()} title="Retry" className="absolute right-3 top-1/2 -translate-y-1/2">
                     <AlertCircle size={13} style={{ color: '#f59e0b' }} />
                   </button>

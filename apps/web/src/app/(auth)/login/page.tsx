@@ -69,9 +69,9 @@ export default function LoginPage() {
     }
   }
 
-  const fillDemo = (email: string) => {
+  const fillDemo = (email: string, password = 'Admin@123!') => {
     setValue('email', email);
-    setValue('password', 'Admin@123!');
+    setValue('password', password);
   };
 
   return (
@@ -196,14 +196,19 @@ export default function LoginPage() {
             <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
               Demo accounts
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+
+            {/* Admin roles */}
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              Admin · <code style={{ color: 'rgba(129,140,248,0.7)', fontStyle: 'normal' }}>Admin@123!</code>
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
               {[
                 { label: 'Super Admin', email: 'admin@workzen.in' },
-                { label: 'HR Manager', email: 'hr@workzen.in' },
-                { label: 'Payroll',    email: 'payroll@workzen.in' },
-                { label: 'Finance',    email: 'finance@workzen.in' },
+                { label: 'HR Manager',  email: 'hr@workzen.in' },
+                { label: 'Payroll',     email: 'payroll@workzen.in' },
+                { label: 'Finance',     email: 'finance@workzen.in' },
               ].map(d => (
-                <button key={d.email} onClick={() => fillDemo(d.email)}
+                <button key={d.email} onClick={() => fillDemo(d.email, 'Admin@123!')}
                   style={{
                     background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.25)',
                     borderRadius: 8, padding: '4px 10px', color: '#818cf8', fontSize: 12,
@@ -215,9 +220,30 @@ export default function LoginPage() {
                 </button>
               ))}
             </div>
-            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, marginTop: 8 }}>
-              Password: <code style={{ color: '#818cf8' }}>Admin@123!</code> for all accounts
+
+            {/* Divider */}
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '8px 0' }} />
+
+            {/* Supervisor roles */}
+            <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+              Site Supervisors · <code style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal' }}>Supervisor@123</code>
             </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {[
+                { label: 'Supervisor', email: 'supervisor@workzen.in', password: 'Supervisor@123' },
+              ].map(d => (
+                <button key={d.email} onClick={() => fillDemo(d.email, d.password)}
+                  style={{
+                    background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
+                    borderRadius: 8, padding: '4px 10px', color: '#34d399', fontSize: 12,
+                    cursor: 'pointer', fontWeight: 500, transition: 'all 0.15s',
+                  }}
+                  onMouseOver={e => { e.currentTarget.style.background = 'rgba(52,211,153,0.16)'; }}
+                  onMouseOut={e => { e.currentTarget.style.background = 'rgba(52,211,153,0.08)'; }}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Form */}

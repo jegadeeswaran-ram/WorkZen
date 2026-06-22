@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_WO_DASH, DUMMY_WO_DATA } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import {
@@ -84,11 +85,12 @@ export default function WorkOrdersPage() {
   const fulfillForm = useForm<any>();
 
   // ── Queries ──────────────────────────────────────────────────────
-  const { data: dash } = useQuery({ queryKey: ['wo-dash'], queryFn: workOrdersApi.dashboard });
+  const { data: dash } = useQuery({ queryKey: ['wo-dash'], queryFn: workOrdersApi.dashboard, placeholderData: DUMMY_WO_DASH });
   const { data: woData, isLoading } = useQuery({
     queryKey: ['work-orders', page],
     queryFn: () => workOrdersApi.list({ page, limit: 15 }),
     enabled: tab === 'list',
+    placeholderData: DUMMY_WO_DATA,
   });
   const { data: woDetail } = useQuery({
     queryKey: ['wo-detail', selectedWO?.id],
@@ -106,7 +108,7 @@ export default function WorkOrdersPage() {
     enabled: showFulfillModal,
   });
 
-  const wos = (woData as any)?.data ?? [];
+  const wos = (woData as any)?.data?.length ? (woData as any).data : DUMMY_WO_DATA.data;
   const meta = (woData as any)?.meta;
   const d = dash as any;
 

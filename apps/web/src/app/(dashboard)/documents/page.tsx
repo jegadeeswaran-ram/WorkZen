@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DUMMY_DOCUMENTS_DATA } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -138,9 +139,10 @@ export default function DocumentsPage() {
         search: search || undefined,
         documentType: docTypeFilter === 'ALL' ? undefined : docTypeFilter,
       }),
+    placeholderData: DUMMY_DOCUMENTS_DATA,
   });
 
-  const docs: Document[] = data?.data ?? [];
+  const docs: Document[] = data?.data?.length ? data.data : (DUMMY_DOCUMENTS_DATA.data as any);
   const meta = data?.meta;
 
   // ── Mutations ──────────────────────────────────────────────────────────────
