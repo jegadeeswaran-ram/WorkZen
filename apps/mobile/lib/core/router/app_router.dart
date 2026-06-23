@@ -47,6 +47,30 @@ import '../../features/supervisor/screens/complaints_screen.dart';
 import '../../features/supervisor/screens/new_complaint_screen.dart';
 import '../../features/supervisor/screens/activity_log_screen.dart';
 import '../../features/supervisor/screens/sites_screen.dart';
+import '../../features/super_admin/screens/super_admin_shell.dart';
+import '../../features/super_admin/screens/sa_dashboard_screen.dart';
+import '../../features/super_admin/screens/sa_sites_screen.dart';
+import '../../features/super_admin/screens/sa_site_detail_screen.dart';
+import '../../features/super_admin/screens/sa_tenders_screen.dart';
+import '../../features/super_admin/screens/sa_tender_detail_screen.dart';
+import '../../features/super_admin/screens/sa_reports_screen.dart';
+import '../../features/super_admin/screens/sa_billing_screen.dart';
+import '../../features/super_admin/screens/sa_clients_screen.dart';
+import '../../features/super_admin/screens/sa_employees_screen.dart';
+import '../../features/super_admin/screens/sa_issues_screen.dart';
+import '../../features/super_admin/screens/sa_complaints_screen.dart';
+import '../../features/super_admin/screens/sa_more_screen.dart';
+import '../../features/hr_admin/screens/hr_shell.dart';
+import '../../features/hr_admin/screens/hr_dashboard_screen.dart';
+import '../../features/hr_admin/screens/hr_employees_screen.dart';
+import '../../features/hr_admin/screens/hr_employee_detail_screen.dart';
+import '../../features/hr_admin/screens/hr_payroll_screen.dart';
+import '../../features/hr_admin/screens/hr_compliance_screen.dart';
+import '../../features/hr_admin/screens/hr_recruitment_screen.dart';
+import '../../features/hr_admin/screens/hr_leave_approvals_screen.dart';
+import '../../features/hr_admin/screens/hr_attendance_screen.dart';
+import '../../features/hr_admin/screens/hr_reports_screen.dart';
+import '../../features/hr_admin/screens/hr_more_screen.dart';
 import '../providers/auth_provider.dart';
 
 class _AuthListenable extends ChangeNotifier {
@@ -67,20 +91,87 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authStateProvider);
       final isLoading = authState is AsyncLoading;
       final isLoggedIn = authState.value != null;
-      final path = state.uri.path;
-      final isAuthRoute = path == '/login' || path == '/splash';
+      final location = state.uri.path;
+      final isAuthRoute = location == '/login' || location == '/splash';
 
-      if (isLoading && path == '/splash') return null;
+      if (isLoading && location == '/splash') return null;
       if (!isLoggedIn && !isAuthRoute) return '/login';
       if (isLoggedIn && isAuthRoute) {
         final role = authState.value?.role ?? '';
-        return role == 'SITE_SUPERVISOR' ? '/supervisor/dashboard' : '/dashboard';
+        if (role == 'SUPER_ADMIN' || role == 'COMPANY_OWNER') {
+          return '/sa/dashboard';
+        } else if (role == 'HR_MANAGER') {
+          return '/hr/dashboard';
+        } else if (role == 'SITE_SUPERVISOR') {
+          return '/supervisor/dashboard';
+        } else {
+          return '/dashboard';
+        }
+      }
+      if (isLoggedIn && !isAuthRoute) {
+        final role = authState.value?.role ?? '';
+        if (role == 'SUPER_ADMIN' || role == 'COMPANY_OWNER') {
+          if (!location.startsWith('/sa/')) return '/sa/dashboard';
+        } else if (role == 'HR_MANAGER') {
+          if (!location.startsWith('/hr/')) return '/hr/dashboard';
+        } else if (role == 'SITE_SUPERVISOR') {
+          if (!location.startsWith('/supervisor/')) return '/supervisor/dashboard';
+        } else {
+          if (!location.startsWith('/dashboard') && location == '/') return '/dashboard';
+        }
       }
       return null;
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+
+      // ── Super Admin Shell ──────────────────────────────────────────────────
+      ShellRoute(
+        builder: (context, state, child) => SuperAdminShell(child: child),
+        routes: [
+          GoRoute(path: '/sa/dashboard', builder: (_, __) => const SaDashboardScreen()),
+          GoRoute(path: '/sa/sites', builder: (_, __) => const SaSitesScreen()),
+          GoRoute(
+            path: '/sa/sites/:siteId',
+            builder: (_, state) => SaSiteDetailScreen(siteId: state.pathParameters['siteId']!),
+          ),
+          GoRoute(path: '/sa/tenders', builder: (_, __) => const SaTendersScreen()),
+          GoRoute(
+            path: '/sa/tenders/:tenderId',
+            builder: (_, state) => SaTenderDetailScreen(tenderId: state.pathParameters['tenderId']!),
+          ),
+          GoRoute(path: '/sa/reports', builder: (_, __) => const SaReportsScreen()),
+          GoRoute(path: '/sa/billing', builder: (_, __) => const SaBillingScreen()),
+          GoRoute(path: '/sa/clients', builder: (_, __) => const SaClientsScreen()),
+          GoRoute(path: '/sa/employees', builder: (_, __) => const SaEmployeesScreen()),
+          GoRoute(path: '/sa/issues', builder: (_, __) => const SaIssuesScreen()),
+          GoRoute(path: '/sa/complaints', builder: (_, __) => const SaComplaintsScreen()),
+          GoRoute(path: '/sa/more', builder: (_, __) => const SaMoreScreen()),
+        ],
+      ),
+
+      // ── HR Admin Shell ─────────────────────────────────────────────────────
+      ShellRoute(
+        builder: (context, state, child) => HrShell(child: child),
+        routes: [
+          GoRoute(path: '/hr/dashboard', builder: (_, __) => const HrDashboardScreen()),
+          GoRoute(path: '/hr/employees', builder: (_, __) => const HrEmployeesScreen()),
+          GoRoute(
+            path: '/hr/employees/:employeeId',
+            builder: (_, state) => HrEmployeeDetailScreen(employeeId: state.pathParameters['employeeId']!),
+          ),
+          GoRoute(path: '/hr/payroll', builder: (_, __) => const HrPayrollScreen()),
+          GoRoute(path: '/hr/compliance', builder: (_, __) => const HrComplianceScreen()),
+          GoRoute(path: '/hr/recruitment', builder: (_, __) => const HrRecruitmentScreen()),
+          GoRoute(path: '/hr/leaves', builder: (_, __) => const HrLeaveApprovalsScreen()),
+          GoRoute(path: '/hr/attendance', builder: (_, __) => const HrAttendanceScreen()),
+          GoRoute(path: '/hr/reports', builder: (_, __) => const HrReportsScreen()),
+          GoRoute(path: '/hr/more', builder: (_, __) => const HrMoreScreen()),
+        ],
+      ),
+
+      // ── Employee / Supervisor Shell ────────────────────────────────────────
       ShellRoute(
         builder: (context, state, child) => HomeScreen(child: child),
         routes: [
