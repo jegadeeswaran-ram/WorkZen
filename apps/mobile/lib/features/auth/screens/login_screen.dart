@@ -111,7 +111,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     // Logo
                     SvgPicture.asset(
                       'assets/images/web-login-dark.svg',
-                      height: 44,
+                      height: 64,
                       fit: BoxFit.contain,
                     )
                         .animate()
