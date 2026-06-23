@@ -18,7 +18,11 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
-  Timer? _fallbackTimer;
+  // Navigation gate: both must be true before we navigate
+  bool _minTimeElapsed = false;
+  bool _authResolved = false;
+  AuthUser? _authUser;
+
   late AnimationController _bgController;
   late AnimationController _particleController;
 
@@ -36,32 +40,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       duration: const Duration(seconds: 4),
     )..repeat();
 
-    _fallbackTimer = Timer(const Duration(seconds: 7), () {
-      if (mounted) context.go('/login');
+    // Minimum 3 seconds on splash
+    Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _minTimeElapsed = true);
+      _tryNavigate();
     });
   }
 
   @override
   void dispose() {
-    _fallbackTimer?.cancel();
     _bgController.dispose();
     _particleController.dispose();
     super.dispose();
+  }
+
+  void _tryNavigate() {
+    if (!_minTimeElapsed || !_authResolved) return;
+    if (!mounted) return;
+    if (_authUser != null) {
+      context.go('/home');
+    } else {
+      context.go('/login');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen(authStateProvider, (_, next) {
       if (next is! AsyncLoading) {
-        _fallbackTimer?.cancel();
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          if (next.value != null) {
-            context.go('/home');
-          } else {
-            context.go('/login');
-          }
-        });
+        _authResolved = true;
+        _authUser = next.value;
+        _tryNavigate();
       }
     });
 
@@ -83,10 +93,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       -0.6 + 0.4 * math.sin(t * math.pi),
                     ),
                     radius: 1.2,
-                    colors: [
-                      const Color(0xFF1A1040),
-                      AppTheme.background,
-                      const Color(0xFF0A0F20),
+                    colors: const [
+                      Color(0xFF1A1040),
+                      Color(0xFF080E1A),
+                      Color(0xFF0A0F20),
                     ],
                     stops: const [0.0, 0.55, 1.0],
                   ),
@@ -98,22 +108,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           // ── Floating glow orbs ────────────────────────────────────────────
           AnimatedBuilder(
             animation: _bgController,
-            builder: (context, _) {
-              final t = _bgController.value;
-              return CustomPaint(
-                painter: _OrbPainter(t),
-              );
-            },
+            builder: (context, _) => CustomPaint(
+              painter: _OrbPainter(_bgController.value),
+            ),
           ),
 
           // ── Floating particles ────────────────────────────────────────────
           AnimatedBuilder(
             animation: _particleController,
-            builder: (context, _) {
-              return CustomPaint(
-                painter: _ParticlePainter(_particleController.value),
-              );
-            },
+            builder: (context, _) => CustomPaint(
+              painter: _ParticlePainter(_particleController.value),
+            ),
           ),
 
           // ── Centered content ──────────────────────────────────────────────
@@ -123,11 +128,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // App icon with glow ring
+                    // Pulsing outer glow ring
                     Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Pulsing outer glow ring
                         Container(
                           width: 130,
                           height: 130,
@@ -148,7 +152,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             )
                             .fadeIn(duration: 600.ms),
 
-                        // Inner glow ring
                         Container(
                           width: 104,
                           height: 104,
@@ -176,7 +179,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             )
                             .fadeIn(delay: 100.ms, duration: 600.ms),
 
-                        // App icon
+                        // App icon (orange square with W)
                         ClipRRect(
                           borderRadius: BorderRadius.circular(22),
                           child: SvgPicture.asset(
@@ -196,12 +199,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                       ],
                     ),
 
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 40),
 
-                    // Wordmark logo
+                    // Wordmark — Splash-screen.svg (white + orange)
                     SvgPicture.asset(
-                      'assets/images/web-login-dark.svg',
-                      height: 38,
+                      'assets/images/splash-screen.svg',
+                      height: 42,
                       fit: BoxFit.contain,
                     )
                         .animate()
@@ -214,35 +217,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                           curve: Curves.easeOut,
                         ),
 
-                    const SizedBox(height: 12),
-
-                    // Tagline
-                    Text(
-                      'MANPOWER · PAYROLL · TENDER ERP',
-                      style: TextStyle(
-                        fontSize: 10,
-                        letterSpacing: 2.5,
-                        color: AppTheme.textMuted,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 800.ms, duration: 600.ms),
-
                     const SizedBox(height: 52),
 
-                    // Loading indicator
+                    // Loading bar
                     SizedBox(
-                      width: 36,
+                      width: 48,
                       height: 2,
                       child: LinearProgressIndicator(
                         backgroundColor: AppTheme.border,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            AppTheme.primary),
                         borderRadius: BorderRadius.circular(2),
                       ),
-                    )
-                        .animate()
-                        .fadeIn(delay: 1000.ms, duration: 400.ms),
+                    ).animate().fadeIn(delay: 900.ms, duration: 400.ms),
                   ],
                 ),
               ),
@@ -267,8 +254,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFfc5700),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFfc5700),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -286,17 +273,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         Container(
                           width: 6,
                           height: 6,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFfc5700),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFfc5700),
                             shape: BoxShape.circle,
                           ),
                         ),
                       ],
                     ),
                   ],
-                )
-                    .animate()
-                    .fadeIn(delay: 1200.ms, duration: 600.ms),
+                ).animate().fadeIn(delay: 1100.ms, duration: 600.ms),
               ),
             ],
           ),
@@ -306,25 +291,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 }
 
-// ── Floating glow orbs painter ─────────────────────────────────────────────────
+// ── Orbs ───────────────────────────────────────────────────────────────────────
 class _OrbPainter extends CustomPainter {
   final double t;
   _OrbPainter(this.t);
 
   @override
   void paint(Canvas canvas, Size size) {
-    void drawOrb(double cx, double cy, double radius, Color color, double alpha) {
+    void drawOrb(double cx, double cy, double r, Color color, double alpha) {
       final paint = Paint()
         ..shader = RadialGradient(
-          colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0.0)],
-        ).createShader(Rect.fromCircle(
-          center: Offset(cx, cy),
-          radius: radius,
-        ));
-      canvas.drawCircle(Offset(cx, cy), radius, paint);
+          colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)],
+        ).createShader(Rect.fromCircle(center: Offset(cx, cy), radius: r));
+      canvas.drawCircle(Offset(cx, cy), r, paint);
     }
 
-    // Slowly drifting orbs
     drawOrb(
       size.width * (0.15 + 0.1 * math.sin(t * math.pi * 2)),
       size.height * (0.2 + 0.08 * math.cos(t * math.pi * 2)),
@@ -352,7 +333,7 @@ class _OrbPainter extends CustomPainter {
   bool shouldRepaint(_OrbPainter old) => old.t != t;
 }
 
-// ── Floating particles painter ─────────────────────────────────────────────────
+// ── Particles ──────────────────────────────────────────────────────────────────
 class _ParticlePainter extends CustomPainter {
   final double t;
   _ParticlePainter(this.t);
@@ -371,16 +352,11 @@ class _ParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..style = PaintingStyle.fill;
-
     for (final p in _particles) {
       final yPos = (p.y - p.speed * t + p.phase) % 1.0;
-      final alpha = (math.sin((yPos) * math.pi) * 0.5).clamp(0.0, 1.0);
+      final alpha = (math.sin(yPos * math.pi) * 0.5).clamp(0.0, 1.0);
       paint.color = AppTheme.primary.withValues(alpha: alpha * 0.5);
-      canvas.drawCircle(
-        Offset(p.x * size.width, yPos * size.height),
-        p.size,
-        paint,
-      );
+      canvas.drawCircle(Offset(p.x * size.width, yPos * size.height), p.size, paint);
     }
   }
 
@@ -390,11 +366,5 @@ class _ParticlePainter extends CustomPainter {
 
 class _Particle {
   final double x, y, size, speed, phase;
-  const _Particle({
-    required this.x,
-    required this.y,
-    required this.size,
-    required this.speed,
-    required this.phase,
-  });
+  const _Particle({required this.x, required this.y, required this.size, required this.speed, required this.phase});
 }

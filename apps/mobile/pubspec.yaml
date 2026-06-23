@@ -50,6 +50,9 @@ dependencies:
   timeago: ^3.6.1
   url_launcher: ^6.2.5
 
+  # SVG rendering
+  flutter_svg: ^2.0.10+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -57,3 +60,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/app-icon.svg
+    - assets/images/fav-icon.svg
+    - assets/images/we-sidebar-dark.svg
+    - assets/images/web-login-dark.svg
+    - assets/images/splash-screen.svg
+    - assets/images/app-login-screen.svg

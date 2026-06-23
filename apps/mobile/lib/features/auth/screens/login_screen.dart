@@ -66,16 +66,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   String _friendlyError(Object? error) {
     final msg = error?.toString() ?? '';
     if (msg.contains('SocketException') ||
-        msg.contains('connection') ||
-        msg.contains('ECONNREFUSED')) {
-      return 'Cannot reach server. Please check your connection.';
+        msg.contains('ECONNREFUSED') ||
+        msg.contains('connection refused') ||
+        msg.contains('Failed host lookup') ||
+        msg.contains('NetworkException')) {
+      return 'Service unavailable. Please try again later.';
     }
-    if (msg.contains('401') || msg.contains('Unauthorized')) {
-      return 'Invalid email or password.';
+    if (msg.contains('timeout') || msg.contains('Timeout')) {
+      return 'Request timed out. Check your network and retry.';
     }
-    if (msg.contains('403')) return 'Access denied for your account.';
-    if (msg.contains('DioException')) return 'Network error. Please try again.';
-    return 'Login failed. Please try again.';
+    if (msg.contains('401') || msg.contains('Unauthorized') ||
+        msg.contains('Invalid credentials') || msg.contains('password')) {
+      return 'Incorrect email or password. Please try again.';
+    }
+    if (msg.contains('403')) return 'Your account does not have access.';
+    if (msg.contains('404')) return 'Account not found. Check your email.';
+    if (msg.contains('DioException') || msg.contains('dio')) {
+      return 'Network error. Please check your connection.';
+    }
+    return 'Sign in failed. Please try again.';
   }
 
   @override
@@ -110,8 +119,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   children: [
                     // Logo
                     SvgPicture.asset(
-                      'assets/images/web-login-dark.svg',
-                      height: 64,
+                      'assets/images/app-login-screen.svg',
+                      height: 72,
                       fit: BoxFit.contain,
                     )
                         .animate()
