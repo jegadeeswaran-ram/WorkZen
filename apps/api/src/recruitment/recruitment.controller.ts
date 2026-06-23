@@ -19,7 +19,10 @@ export class RecruitmentController {
 
   // Requisitions
   @Get('requisitions') @RequirePermissions('recruitment:read')
-  getRequisitions(@TenantId() t: string, @Query() q: any) { return this.service.getRequisitions(t, q); }
+  getRequisitions(@TenantId() t: string, @Query() q: any) {
+    const { status, page, limit, ...rest } = q;
+    return this.service.getRequisitions(t, { ...rest, status, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20 });
+  }
 
   @Post('requisitions') @RequirePermissions('recruitment:write')
   createRequisition(@TenantId() t: string, @Body() dto: any, @CurrentUser('id') uid: string) { return this.service.createRequisition(t, dto, uid); }
@@ -29,7 +32,10 @@ export class RecruitmentController {
 
   // Candidates
   @Get('candidates') @RequirePermissions('recruitment:read')
-  getAllCandidates(@TenantId() t: string, @Query() q: any) { return this.service.getAllCandidates(t, q); }
+  getAllCandidates(@TenantId() t: string, @Query() q: any) {
+    const { status, page, limit, ...rest } = q;
+    return this.service.getAllCandidates(t, { ...rest, status, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20 });
+  }
 
   @Get('candidates/:id') @RequirePermissions('recruitment:read')
   getCandidate(@TenantId() t: string, @Param('id') id: string) { return this.service.getCandidate(t, id); }

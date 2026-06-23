@@ -79,18 +79,29 @@ class HrSummary {
     required this.complianceScore,
   });
 
-  factory HrSummary.fromJson(Map<String, dynamic> j) => HrSummary(
-        totalEmployees: _toInt(j['totalEmployees']),
-        newThisMonth: _toInt(j['newJoinersThisMonth'] ?? j['newThisMonth']),
-        openPositions: _toInt(j['openRequisitions'] ?? j['openPositions']),
-        pendingLeaves:
-            _toInt(j['pendingLeaveRequests'] ?? j['pendingLeaves']),
-        overdueCompliance:
-            _toInt(j['complianceOverdue'] ?? j['overdueCompliance']),
-        payrollStatus: j['payrollStatus'] as String? ?? 'PENDING',
-        complianceScore:
-            _toDouble(j['complianceScore'] ?? 88.0),
-      );
+  factory HrSummary.fromJson(Map<String, dynamic> j) {
+    // Normalize payroll status from API values to screen values
+    final rawPayroll = j['payrollThisMonth'] as Map<String, dynamic>?;
+    final rawStatus = rawPayroll?['status'] as String? ??
+        j['payrollStatus'] as String? ?? '';
+    final String payrollStatus;
+    if (rawStatus.contains('PAID') || rawStatus == 'DISBURSED') {
+      payrollStatus = 'COMPLETED';
+    } else if (rawStatus.contains('PROCESSING') || rawStatus.contains('APPROVAL')) {
+      payrollStatus = 'PROCESSING';
+    } else {
+      payrollStatus = 'PENDING';
+    }
+    return HrSummary(
+      totalEmployees: _toInt(j['employees'] ?? j['totalEmployees']),
+      newThisMonth: _toInt(j['newJoinersThisMonth'] ?? j['newThisMonth']),
+      openPositions: _toInt(j['openRequisitions'] ?? j['openPositions']),
+      pendingLeaves: _toInt(j['pendingLeaveRequests'] ?? j['pendingLeaves']),
+      overdueCompliance: _toInt(j['complianceOverdue'] ?? j['overdueCompliance']),
+      payrollStatus: payrollStatus,
+      complianceScore: _toDouble(j['complianceScore'] ?? 88.0),
+    );
+  }
 }
 
 /// An employee row in the HR employees list.
@@ -116,14 +127,17 @@ class HrEmployee {
   factory HrEmployee.fromJson(Map<String, dynamic> j) {
     final firstName = j['firstName'] as String? ?? '';
     final lastName = j['lastName'] as String? ?? '';
+    // designation/department may be objects {name: "..."} or strings
+    final desig = j['designation'];
+    final dept = j['department'];
     return HrEmployee(
       id: j['id'] as String? ?? '',
       empCode: j['employeeCode'] as String? ?? j['empCode'] as String? ?? '',
       name: '$firstName $lastName'.trim(),
-      designation: j['designation'] as String? ?? '',
-      department: j['department'] as String? ?? '',
+      designation: desig is Map ? (desig['name'] as String? ?? '') : desig as String? ?? '',
+      department: dept is Map ? (dept['name'] as String? ?? '') : dept as String? ?? '',
       status: j['status'] as String? ?? 'ACTIVE',
-      photoUrl: j['photoUrl'] as String?,
+      photoUrl: j['photo'] as String? ?? j['photoUrl'] as String?,
     );
   }
 }
@@ -227,19 +241,31 @@ class HrEmployeeDetail {
           j['monthlySalary'],
     );
 
+    final desig = j['designation'];
+    final dept = j['department'];
+    final rawAddr = j['address'];
+    final String? address;
+    if (rawAddr is Map<String, dynamic>) {
+      final parts = [rawAddr['street'], rawAddr['city'], rawAddr['state']]
+          .where((v) => v != null && (v as String).isNotEmpty)
+          .join(', ');
+      address = parts.isNotEmpty ? parts : null;
+    } else {
+      address = rawAddr as String?;
+    }
     return HrEmployeeDetail(
       id: j['id'] as String? ?? '',
       empCode: j['employeeCode'] as String? ?? j['empCode'] as String? ?? '',
       name: '$firstName $lastName'.trim(),
-      designation: j['designation'] as String? ?? '',
-      department: j['department'] as String? ?? '',
+      designation: desig is Map ? (desig['name'] as String? ?? '') : desig as String? ?? '',
+      department: dept is Map ? (dept['name'] as String? ?? '') : dept as String? ?? '',
       status: j['status'] as String? ?? 'ACTIVE',
       employmentType: j['employmentType'] as String? ?? 'PERMANENT',
       dateOfBirth: j['dateOfBirth'] as String?,
       gender: j['gender'] as String?,
-      phone: j['phone'] as String? ?? j['mobileNumber'] as String?,
+      phone: j['personalPhone'] as String? ?? j['phone'] as String? ?? j['mobileNumber'] as String?,
       email: j['email'] as String?,
-      address: j['address'] as String?,
+      address: address,
       joiningDate: j['joiningDate'] as String? ?? j['dateOfJoining'] as String?,
       aadhaarNumber: j['aadhaarNumber'] as String?,
       panNumber: j['panNumber'] as String?,
@@ -254,14 +280,14 @@ class HrEmployeeDetail {
   }
 }
 
-/// An attendance record row in the HR daily attendance view.
+/// An attendance record row in the HR attendance view (monthly-report format).
 class HrAttendanceRecord {
   final String employeeId;
   final String employeeName;
-  final String designation;
-  final String? checkInTime;
-  final String? checkOutTime;
-  final String? status; // PRESENT | ABSENT | ON_LEAVE | LATE
+  final String designation; // employeeCode when designation is unavailable
+  final String? checkInTime; // repurposed: "Present: X days"
+  final String? checkOutTime; // repurposed: "Absent: X days"
+  final String? status; // PRESENT | ABSENT | ON_LEAVE | PARTIAL
 
   const HrAttendanceRecord({
     required this.employeeId,
@@ -273,18 +299,60 @@ class HrAttendanceRecord {
   });
 
   factory HrAttendanceRecord.fromJson(Map<String, dynamic> j) {
-    final employee = j['employee'] as Map<String, dynamic>? ?? {};
-    final firstName = employee['firstName'] as String? ?? '';
-    final lastName = employee['lastName'] as String? ?? '';
-    return HrAttendanceRecord(
-      employeeId:
-          j['employeeId'] as String? ?? employee['id'] as String? ?? '',
-      employeeName: '$firstName $lastName'.trim(),
-      designation: employee['designation'] as String? ?? '',
-      checkInTime: j['checkInTime'] as String?,
-      checkOutTime: j['checkOutTime'] as String?,
-      status: (j['status'] as String?)?.toUpperCase(),
-    );
+    // Handles both monthly-report format {id, firstName, lastName, employeeCode, total, present, absent, leaves}
+    // and legacy individual-record format {employee: {...}, checkInTime, status}
+    final employee = j['employee'] as Map<String, dynamic>?;
+    final String firstName;
+    final String lastName;
+    final String employeeId;
+    final String designation;
+
+    if (employee != null) {
+      // Legacy individual record format
+      firstName = employee['firstName'] as String? ?? '';
+      lastName = employee['lastName'] as String? ?? '';
+      employeeId = j['employeeId'] as String? ?? employee['id'] as String? ?? '';
+      final desig = employee['designation'];
+      designation = desig is Map
+          ? (desig['name'] as String? ?? '')
+          : desig as String? ?? employee['employeeCode'] as String? ?? '';
+      final status = (j['status'] as String?)?.toUpperCase();
+      return HrAttendanceRecord(
+        employeeId: employeeId,
+        employeeName: '$firstName $lastName'.trim(),
+        designation: designation,
+        checkInTime: j['checkInTime'] as String?,
+        checkOutTime: j['checkOutTime'] as String?,
+        status: status,
+      );
+    } else {
+      // Monthly report format
+      firstName = j['firstName'] as String? ?? '';
+      lastName = j['lastName'] as String? ?? '';
+      employeeId = j['id'] as String? ?? '';
+      designation = j['employeeCode'] as String? ?? '';
+      final present = j['present'] as int? ?? 0;
+      final absent = j['absent'] as int? ?? 0;
+      final leaves = j['leaves'] as int? ?? 0;
+      final String status;
+      if (present == 0 && leaves > 0) {
+        status = 'ON_LEAVE';
+      } else if (present > absent) {
+        status = 'PRESENT';
+      } else if (present == 0) {
+        status = 'ABSENT';
+      } else {
+        status = 'PRESENT';
+      }
+      return HrAttendanceRecord(
+        employeeId: employeeId,
+        employeeName: '$firstName $lastName'.trim(),
+        designation: designation,
+        checkInTime: 'Present: $present days',
+        checkOutTime: 'Absent: $absent days',
+        status: status,
+      );
+    }
   }
 }
 
@@ -316,12 +384,21 @@ class HrLeaveRequest {
     final employee = j['employee'] as Map<String, dynamic>? ?? {};
     final firstName = employee['firstName'] as String? ?? '';
     final lastName = employee['lastName'] as String? ?? '';
+    // leaveType may be an object {id, name, code} or a plain string
+    final rawLeaveType = j['leaveType'];
+    final String leaveType;
+    if (rawLeaveType is Map<String, dynamic>) {
+      leaveType = rawLeaveType['code'] as String? ??
+          rawLeaveType['name'] as String? ?? '';
+    } else {
+      leaveType = rawLeaveType as String? ?? '';
+    }
     return HrLeaveRequest(
       id: j['id'] as String? ?? '',
       employeeId:
           j['employeeId'] as String? ?? employee['id'] as String? ?? '',
       employeeName: '$firstName $lastName'.trim(),
-      leaveType: j['leaveType'] as String? ?? '',
+      leaveType: leaveType,
       startDate: j['startDate'] as String? ?? '',
       endDate: j['endDate'] as String? ?? '',
       status: j['status'] as String? ?? '',
@@ -350,22 +427,35 @@ class HrPayrollRun {
   });
 
   factory HrPayrollRun.fromJson(Map<String, dynamic> j) {
-    // Prefer explicit month field; fall back to formatting createdAt
-    final rawMonth =
-        j['month'] as String? ?? j['periodMonth'] as String? ?? '';
-    final rawCreated = j['createdAt'] as String? ?? '';
-    final month = rawMonth.isNotEmpty
-        ? _formatMonth(rawMonth)
-        : rawCreated.isNotEmpty
-            ? _formatMonth(rawCreated)
-            : '';
+    // API returns month as int (1-12) and year as int
+    final monthNum = j['month'];
+    final yearNum = j['year'];
+    String month;
+    if (monthNum != null && yearNum != null) {
+      // Build "June 2026" from numeric month + year
+      month = _formatMonth('$yearNum-${monthNum.toString().padLeft(2, '0')}');
+    } else {
+      // Fallback: format from createdAt
+      final rawCreated = j['createdAt'] as String? ?? '';
+      month = rawCreated.isNotEmpty ? _formatMonth(rawCreated) : '';
+    }
+
+    // Normalize status to PENDING | PROCESSING | COMPLETED
+    final rawStatus = j['status'] as String? ?? '';
+    final String status;
+    if (rawStatus == 'PAID' || rawStatus == 'DISBURSED') {
+      status = 'COMPLETED';
+    } else if (rawStatus == 'PENDING_APPROVAL' || rawStatus == 'PROCESSING') {
+      status = 'PROCESSING';
+    } else {
+      status = 'PENDING';
+    }
 
     return HrPayrollRun(
       id: j['id'] as String? ?? '',
       month: month,
-      status: j['status'] as String? ?? 'PENDING',
-      employeeCount:
-          _toInt(j['employeeCount'] ?? j['totalEmployees']),
+      status: status,
+      employeeCount: _toInt(j['employeeCount'] ?? j['totalEmployees']),
       totalNet: _toDouble(j['totalNetPay'] ?? j['totalNet']),
       processedAt: j['processedAt'] as String?,
     );
@@ -431,17 +521,20 @@ class HrJobRequisition {
     required this.createdAt,
   });
 
-  factory HrJobRequisition.fromJson(Map<String, dynamic> j) =>
-      HrJobRequisition(
-        id: j['id'] as String? ?? '',
-        title: j['title'] as String? ?? '',
-        department: j['department'] as String? ?? '',
-        status: j['status'] as String? ?? 'OPEN',
-        vacancies: _toInt(j['vacancies'] ?? j['numberOfVacancies']),
-        applicationsCount:
-            _toInt(j['applicationsCount'] ?? j['candidateCount']),
-        createdAt: j['createdAt'] as String? ?? '',
-      );
+  factory HrJobRequisition.fromJson(Map<String, dynamic> j) {
+    final dept = j['department'];
+    final count = j['_count'] as Map<String, dynamic>?;
+    return HrJobRequisition(
+      id: j['id'] as String? ?? '',
+      title: j['title'] as String? ?? j['requisitionNo'] as String? ?? '',
+      department: dept is Map ? (dept['name'] as String? ?? '') : dept as String? ?? '',
+      status: j['status'] as String? ?? 'OPEN',
+      vacancies: _toInt(j['vacancies'] ?? j['numberOfVacancies'] ?? j['positions']),
+      applicationsCount: _toInt(
+          j['applicationsCount'] ?? count?['candidates'] ?? j['candidateCount']),
+      createdAt: j['createdAt'] as String? ?? '',
+    );
+  }
 }
 
 /// A candidate in the HR recruitment pipeline.
@@ -465,17 +558,18 @@ class HrCandidate {
   factory HrCandidate.fromJson(Map<String, dynamic> j) {
     final firstName = j['firstName'] as String? ?? '';
     final lastName = j['lastName'] as String? ?? '';
-    final name =
-        j['name'] as String? ?? '$firstName $lastName'.trim();
-    final requisition =
+    final name = j['name'] as String? ?? '$firstName $lastName'.trim();
+    // API returns 'requisition' not 'jobRequisition'
+    final requisition = j['requisition'] as Map<String, dynamic>? ??
         j['jobRequisition'] as Map<String, dynamic>?;
     return HrCandidate(
       id: j['id'] as String? ?? '',
       name: name,
-      position:
-          requisition?['title'] as String? ?? j['position'] as String? ?? 'Unknown Position',
+      position: requisition?['title'] as String? ??
+          j['position'] as String? ?? 'Unknown Position',
       status: j['status'] as String? ?? 'APPLIED',
-      appliedDate: j['appliedDate'] as String? ?? j['createdAt'] as String? ?? '',
+      appliedDate:
+          j['appliedDate'] as String? ?? j['createdAt'] as String? ?? '',
       currentStage: j['currentStage'] as String?,
     );
   }
@@ -529,14 +623,15 @@ final hrEmployeeDetailProvider = FutureProvider.autoDispose
   }
 });
 
-/// Today's attendance for all employees (HR sees all).
-/// GET /attendance/today?limit=200
+/// Monthly attendance report for all employees (HR view).
+/// GET /attendance/monthly-report?month=M&year=YYYY
 final hrAttendanceTodayProvider =
     FutureProvider.autoDispose<List<HrAttendanceRecord>>((ref) async {
   final dio = ref.watch(apiClientProvider);
   try {
-    final res = await dio.get('/attendance/today',
-        queryParameters: {'limit': '200'});
+    final now = DateTime.now();
+    final res = await dio.get('/attendance/monthly-report',
+        queryParameters: {'month': now.month, 'year': now.year});
     return _parseList(res.data)
         .map(HrAttendanceRecord.fromJson)
         .toList();
@@ -554,7 +649,10 @@ final hrPendingLeavesProvider =
   try {
     final res = await dio.get('/attendance/leave-requests',
         queryParameters: {'status': 'PENDING', 'limit': '50'});
-    return _parseList(res.data).map(HrLeaveRequest.fromJson).toList();
+    return _parseList(res.data)
+        .map(HrLeaveRequest.fromJson)
+        .where((r) => r.status == 'PENDING')
+        .toList();
   } on DioException catch (e) {
     throw e.response?.data?['message'] as String? ??
         'Failed to load pending leave requests';
@@ -577,15 +675,14 @@ final hrAllLeavesProvider =
 });
 
 /// Payroll runs (latest 12, newest first).
-/// GET /payroll-runs?limit=12&sortBy=createdAt&sortOrder=desc
+/// GET /payroll/runs?limit=12
 final hrPayrollRunsProvider =
     FutureProvider.autoDispose<List<HrPayrollRun>>((ref) async {
   final dio = ref.watch(apiClientProvider);
   try {
-    final res = await dio.get('/payroll-runs', queryParameters: {
+    final res = await dio.get('/payroll/runs', queryParameters: {
       'limit': '12',
-      'sortBy': 'createdAt',
-      'sortOrder': 'desc',
+      'order': 'desc',
     });
     return _parseList(res.data).map(HrPayrollRun.fromJson).toList();
   } on DioException catch (e) {
@@ -594,28 +691,16 @@ final hrPayrollRunsProvider =
   }
 });
 
-/// Compliance summary (PF, ESI, TDS, PT, LWF).
-/// Primary: GET /compliance/summary
-/// Fallback: GET /compliance-items?limit=20
-/// If both fail, return default stub data.
+/// Compliance items list (PF, ESI, TDS, PT, LWF filings).
+/// Primary: GET /compliance/items?limit=20
+/// Fallback: stub data
 final hrComplianceProvider =
     FutureProvider.autoDispose<List<HrCompliance>>((ref) async {
   final dio = ref.watch(apiClientProvider);
 
-  // Try primary endpoint
+  // Primary endpoint
   try {
-    final res = await dio.get('/compliance/summary');
-    final raw = _parseList(res.data);
-    if (raw.isNotEmpty) {
-      return raw.map(HrCompliance.fromJson).toList();
-    }
-  } on DioException catch (_) {
-    // Fall through to secondary endpoint
-  }
-
-  // Try fallback endpoint
-  try {
-    final res = await dio.get('/compliance-items',
+    final res = await dio.get('/compliance/items',
         queryParameters: {'limit': '20'});
     final raw = _parseList(res.data);
     if (raw.isNotEmpty) {
@@ -630,12 +715,12 @@ final hrComplianceProvider =
 });
 
 /// Job requisitions (open positions).
-/// GET /job-requisitions?limit=50
+/// GET /recruitment/requisitions?limit=50
 final hrRequisitionsProvider =
     FutureProvider.autoDispose<List<HrJobRequisition>>((ref) async {
   final dio = ref.watch(apiClientProvider);
   try {
-    final res = await dio.get('/job-requisitions',
+    final res = await dio.get('/recruitment/requisitions',
         queryParameters: {'limit': '50'});
     return _parseList(res.data)
         .map(HrJobRequisition.fromJson)
@@ -647,13 +732,13 @@ final hrRequisitionsProvider =
 });
 
 /// Candidates in the recruitment pipeline.
-/// GET /candidates?limit=100
+/// GET /recruitment/candidates?limit=100
 final hrCandidatesProvider =
     FutureProvider.autoDispose<List<HrCandidate>>((ref) async {
   final dio = ref.watch(apiClientProvider);
   try {
-    final res =
-        await dio.get('/candidates', queryParameters: {'limit': '100'});
+    final res = await dio.get('/recruitment/candidates',
+        queryParameters: {'limit': '100'});
     return _parseList(res.data).map(HrCandidate.fromJson).toList();
   } on DioException catch (e) {
     throw e.response?.data?['message'] as String? ??
@@ -669,12 +754,12 @@ class HrLeaveNotifier extends AsyncNotifier<void> {
   Future<void> build() async {}
 
   /// Approve a leave request by ID.
-  /// PATCH /attendance/leave-requests/:leaveId { status: 'APPROVED' }
+  /// PATCH /attendance/leave-requests/:leaveId/approve { status: 'APPROVED' }
   Future<void> approve(String leaveId) async {
     final dio = ref.read(apiClientProvider);
     try {
       await dio.patch(
-        '/attendance/leave-requests/$leaveId',
+        '/attendance/leave-requests/$leaveId/approve',
         data: {'status': 'APPROVED'},
       );
       ref.invalidate(hrPendingLeavesProvider);
@@ -686,12 +771,12 @@ class HrLeaveNotifier extends AsyncNotifier<void> {
   }
 
   /// Reject a leave request by ID.
-  /// PATCH /attendance/leave-requests/:leaveId { status: 'REJECTED' }
+  /// PATCH /attendance/leave-requests/:leaveId/approve { status: 'REJECTED' }
   Future<void> reject(String leaveId) async {
     final dio = ref.read(apiClientProvider);
     try {
       await dio.patch(
-        '/attendance/leave-requests/$leaveId',
+        '/attendance/leave-requests/$leaveId/approve',
         data: {'status': 'REJECTED'},
       );
       ref.invalidate(hrPendingLeavesProvider);

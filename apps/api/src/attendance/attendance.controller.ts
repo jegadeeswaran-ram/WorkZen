@@ -57,7 +57,10 @@ export class AttendanceController {
   report(@TenantId() t: string, @Query() q: any) { return this.service.getMonthlyReport(t, q); }
 
   @Get('leave-requests') @RequirePermissions('leave:read')
-  getLeaves(@TenantId() t: string, @Query() q: PaginationDto) { return this.service.getLeaveRequests(t, q); }
+  getLeaves(@TenantId() t: string, @Query() q: any) {
+    const { status, page, limit, ...rest } = q;
+    return this.service.getLeaveRequests(t, { ...rest, status, page: page ? Number(page) : 1, limit: limit ? Number(limit) : 20 });
+  }
 
   @Patch('leave-requests/:id/approve') @RequirePermissions('leave:approve')
   approveLeave(@TenantId() t: string, @Param('id') id: string, @Body() body: any, @CurrentUser('id') uid: string) {

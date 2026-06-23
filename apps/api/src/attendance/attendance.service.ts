@@ -73,9 +73,10 @@ export class AttendanceService {
     return buildPaginatedResponse(report, total, page, limit);
   }
 
-  async getLeaveRequests(tenantId: string, query: PaginationDto) {
-    const { page = 1, limit = 20 } = query;
-    const where = { tenantId };
+  async getLeaveRequests(tenantId: string, query: any) {
+    const { page = 1, limit = 20, status } = query;
+    const where: any = { tenantId };
+    if (status) where.status = status;
     const [data, total] = await Promise.all([
       this.prisma.leaveRequest.findMany({
         where,

@@ -42,16 +42,14 @@ class SaSummary {
   });
 
   factory SaSummary.fromJson(Map<String, dynamic> j) => SaSummary(
-        totalEmployees: _toInt(j['totalEmployees']),
+        totalEmployees: _toInt(j['employees'] ?? j['totalEmployees']),
         activeSites: _toInt(j['deploymentsActive'] ?? j['activeSites']),
         activeTenders: _toInt(j['activeTenders']),
         openIssues: _toInt(
             (j['complaints'] as Map<String, dynamic>?)?['open'] ??
                 j['openIssues']),
         overdueCompliance: _toInt(j['complianceOverdue']),
-        monthlyBilling: _toDouble(
-            (j['invoicesThisMonth'] as Map<String, dynamic>?)?['totalAmount'] ??
-                j['monthlyBilling']),
+        monthlyBilling: _toDouble(j['invoicesThisMonth'] ?? j['monthlyBilling']),
       );
 }
 
@@ -88,17 +86,29 @@ class SaSite {
 
   factory SaSite.fromJson(Map<String, dynamic> j) {
     final supervisor = j['supervisor'] as Map<String, dynamic>?;
-    final todayAttendance =
-        j['todayAttendance'] as Map<String, dynamic>?;
+    // address may be object {city, state, pincode} or plain string
+    final rawAddr = j['address'];
+    final String address;
+    if (rawAddr is Map<String, dynamic>) {
+      final parts = [rawAddr['city'], rawAddr['state']]
+          .where((v) => v != null && (v as String).isNotEmpty)
+          .join(', ');
+      address = parts.isNotEmpty ? parts : '';
+    } else {
+      address = rawAddr as String? ?? '';
+    }
+    final isActive = j['isActive'] as bool? ?? true;
     return SaSite(
       id: j['id'] as String? ?? '',
       name: j['name'] as String? ?? '',
-      address: j['address'] as String? ?? '',
-      status: j['status'] as String? ?? 'ACTIVE',
-      supervisorName: supervisor?['name'] as String?,
-      supervisorPhone: supervisor?['phone'] as String?,
-      employeeCount: _toInt(j['employeeCount']),
-      attendancePercent: _toDouble(todayAttendance?['percent']),
+      address: address,
+      status: isActive ? 'ACTIVE' : 'INACTIVE',
+      supervisorName: supervisor != null
+          ? '${supervisor['firstName'] ?? ''} ${supervisor['lastName'] ?? ''}'.trim()
+          : null,
+      supervisorPhone: supervisor?['personalPhone'] as String?,
+      employeeCount: _toInt(j['employeeCount'] ?? (j['_count'] as Map?)?['deployments']),
+      attendancePercent: _toDouble((j['todayAttendance'] as Map?)?['percent']),
     );
   }
 }
@@ -223,19 +233,22 @@ class SaTender {
   });
 
   factory SaTender.fromJson(Map<String, dynamic> j) {
+    // API returns tenderName + tenderValue; some older records may use title/contractValue
     final client = j['client'] as Map<String, dynamic>?;
+    final dept = j['department'] as Map<String, dynamic>?;
     final startDate = j['startDate'] as String? ?? '';
     final endDate = j['endDate'] as String? ?? '';
     final progress = _computeProgress(startDate, endDate);
     return SaTender(
       id: j['id'] as String? ?? '',
       tenderNumber: j['tenderNumber'] as String? ?? '',
-      title: j['title'] as String? ?? '',
+      title: j['tenderName'] as String? ?? j['title'] as String? ?? '',
       status: j['status'] as String? ?? '',
-      clientName: client?['name'] as String? ?? '',
+      clientName: client?['name'] as String? ??
+          dept?['name'] as String? ?? '',
       startDate: startDate,
       endDate: endDate,
-      contractValue: _toDouble(j['contractValue']),
+      contractValue: _toDouble(j['tenderValue'] ?? j['contractValue']),
       progressPercent: progress,
     );
   }
@@ -299,7 +312,8 @@ class SaBillingSummary {
   });
 
   factory SaBillingSummary.fromJson(Map<String, dynamic> j) {
-    final billed = _toDouble(j['totalBilled']);
+    // /billing/dashboard returns totalRevenue, collected, outstanding, overdueCount
+    final billed = _toDouble(j['totalRevenue'] ?? j['totalBilled']);
     final collected = _toDouble(j['collected']);
     final rate = billed > 0
         ? '${((collected / billed) * 100).round()}%'
@@ -364,9 +378,12 @@ class SaClient {
   factory SaClient.fromJson(Map<String, dynamic> j) => SaClient(
         id: j['id'] as String? ?? '',
         name: j['name'] as String? ?? '',
-        type: j['type'] as String? ?? '',
-        activeTenders: _toInt(j['activeTenders']),
-        outstandingBalance: _toDouble(j['outstandingBalance']),
+        // API returns clientType not type
+        type: j['clientType'] as String? ?? j['type'] as String? ?? '',
+        activeTenders: _toInt(
+            j['activeTenders'] ?? (j['_count'] as Map?)?['tenders']),
+        outstandingBalance:
+            _toDouble(j['outstandingBalance'] ?? j['creditLimitUsed']),
       );
 }
 
@@ -395,12 +412,15 @@ class SaEmployee {
     final lastName = j['lastName'] as String? ?? '';
     final deployment = j['deployment'] as Map<String, dynamic>?;
     final site = deployment?['site'] as Map<String, dynamic>?;
+    // designation and department can be objects {name: "..."} or strings
+    final desig = j['designation'];
+    final dept = j['department'];
     return SaEmployee(
       id: j['id'] as String? ?? '',
       empCode: j['employeeCode'] as String? ?? j['empCode'] as String? ?? '',
       name: '$firstName $lastName'.trim(),
-      designation: j['designation'] as String? ?? '',
-      department: j['department'] as String? ?? '',
+      designation: desig is Map ? (desig['name'] as String? ?? '') : desig as String? ?? '',
+      department: dept is Map ? (dept['name'] as String? ?? '') : dept as String? ?? '',
       siteName: site?['name'] as String? ?? '-',
       status: j['status'] as String? ?? '',
     );
@@ -583,12 +603,12 @@ final saTenderDetailProvider = FutureProvider.autoDispose
 });
 
 /// Billing summary (totals, collection rate).
-/// GET /billing/summary
+/// GET /billing/dashboard
 final saBillingSummaryProvider =
     FutureProvider.autoDispose<SaBillingSummary>((ref) async {
   final dio = ref.watch(apiClientProvider);
   try {
-    final res = await dio.get('/billing/summary');
+    final res = await dio.get('/billing/dashboard');
     return SaBillingSummary.fromJson(_parseObject(res.data));
   } on DioException catch (e) {
     throw e.response?.data?['message'] as String? ??
