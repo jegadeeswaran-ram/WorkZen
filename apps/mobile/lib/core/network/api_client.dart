@@ -5,9 +5,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Web (Chrome) uses localhost; Android emulator uses 10.0.2.2 to reach host
 const _baseUrl = kIsWeb
-    ? 'http://localhost:3001/api/v1'
+    ? 'http://localhost:4000/api/v1'
     : const String.fromEnvironment('API_URL',
-        defaultValue: 'http://10.0.2.2:3001/api/v1');
+        defaultValue: 'http://10.0.2.2:4000/api/v1');
 
 // Single shared storage instance used by both api_client and auth_provider
 final secureStorageProvider = Provider<FlutterSecureStorage>((_) =>
