@@ -77,6 +77,15 @@ class SaSite {
     required this.attendancePercent,
   });
 
+  factory SaSite.placeholder() => const SaSite(
+        id: '',
+        name: 'Loading...',
+        address: '',
+        status: 'ACTIVE',
+        employeeCount: 0,
+        attendancePercent: 0,
+      );
+
   factory SaSite.fromJson(Map<String, dynamic> j) {
     final supervisor = j['supervisor'] as Map<String, dynamic>?;
     final todayAttendance =
