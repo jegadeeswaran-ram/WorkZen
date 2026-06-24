@@ -4,7 +4,7 @@
 COMPLETE
 
 ## Commit Hash
-_(see below — populated after commit)_
+33de45a
 
 ## Changes
 - Replaced placeholder `lib/features/super_admin/screens/sa_dashboard_screen.dart` with full

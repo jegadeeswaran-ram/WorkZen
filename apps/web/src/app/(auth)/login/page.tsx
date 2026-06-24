@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import {
   Eye, EyeOff, Loader2, Shield, Zap, BarChart3, Users,
   FileText, CreditCard, MapPin, CheckCircle,
@@ -97,19 +98,16 @@ export default function LoginPage() {
 
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 14,
-              background: 'linear-gradient(135deg,#4f46e5,#818cf8)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 30px rgba(99,102,241,0.4)',
-            }}>
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: 20, fontFamily: 'Plus Jakarta Sans' }}>W</span>
-            </div>
-            <div>
-              <span style={{ color: '#fff', fontWeight: 700, fontSize: 20, fontFamily: 'Plus Jakarta Sans', letterSpacing: '-0.3px' }}>WorkZen</span>
-              <span style={{ display: 'block', color: 'rgba(255,255,255,0.35)', fontSize: 11, marginTop: -2 }}>ERP Platform</span>
-            </div>
+          <div>
+            <Image
+              src="/logos/web-login-dark.svg"
+              alt="WorkZen ERP"
+              width={1120}
+              height={300}
+              priority
+              unoptimized
+              style={{ height: 150, width: 'auto' }}
+            />
           </div>
 
           {/* Hero */}
@@ -169,13 +167,18 @@ export default function LoginPage() {
           transition={{ duration: 0.4 }}
           style={{ width: '100%', maxWidth: 420 }}>
 
-          {/* Mobile logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 32 }} className="mobile-logo">
-            <style>{`.mobile-logo { display: flex; } @media (min-width: 1024px) { .mobile-logo { display: none; } }`}</style>
-            <div style={{ width: 38, height: 38, borderRadius: 12, background: 'linear-gradient(135deg,#4f46e5,#818cf8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ color: '#fff', fontWeight: 800, fontSize: 18, fontFamily: 'Plus Jakarta Sans' }}>W</span>
-            </div>
-            <span style={{ color: '#fff', fontWeight: 700, fontSize: 18, fontFamily: 'Plus Jakarta Sans' }}>WorkZen</span>
+          {/* Mobile logo — shown only when left panel is hidden */}
+          <div style={{ marginBottom: 32 }} className="mobile-logo">
+            <style>{`.mobile-logo { display: block; } @media (min-width: 1024px) { .mobile-logo { display: none; } }`}</style>
+            <Image
+              src="/logos/web-login-dark.svg"
+              alt="WorkZen ERP"
+              width={440}
+              height={120}
+              priority
+              unoptimized
+              style={{ height: 104, width: 'auto' }}
+            />
           </div>
 
           {/* Heading */}

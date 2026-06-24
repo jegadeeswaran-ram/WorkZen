@@ -1,0 +1,26 @@
+# WorkZen ERP - Apache .htaccess Reverse Proxy
+# Place this file at: ~/domains/workzen.redonix.in/public_html/.htaccess
+# This proxies API requests to port 3001 and web requests to port 3000
+
+Options -Indexes
+RewriteEngine On
+
+# --- API routes → port 3001 ---
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ http://127.0.0.1:3001/$1 [P,L]
+
+# Proxy WebSocket for API (if needed)
+RewriteCond %{HTTP:Upgrade} websocket [NC]
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ ws://127.0.0.1:3001/$1 [P,L]
+
+# --- All other requests → Next.js port 3000 ---
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>

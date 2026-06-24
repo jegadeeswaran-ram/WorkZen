@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+﻿import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -22,7 +22,7 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
 
-  // CORS — allow any localhost port in dev + configured origins
+  // CORS â€” allow any localhost port in dev + configured origins
   app.enableCors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
@@ -58,7 +58,7 @@ async function bootstrap() {
   // Swagger
   const swaggerConfig = new DocumentBuilder()
     .setTitle('WorkZen ERP API')
-    .setDescription('Enterprise Manpower ERP — REST + GraphQL API')
+    .setDescription('Enterprise Manpower ERP â€” REST + GraphQL API')
     .setVersion('1.0')
     .addBearerAuth()
     .addServer(`http://localhost:${port}`, 'Local')
@@ -70,8 +70,8 @@ async function bootstrap() {
   });
 
   await app.listen(port);
-  console.log(`🚀 WorkZen API running at http://localhost:${port}/api/v1`);
-  console.log(`📄 Swagger docs: http://localhost:${port}/api/docs`);
+  console.log(`ðŸš€ WorkZen API running at http://localhost:${port}/api/v1`);
+  console.log(`ðŸ“„ Swagger docs: http://localhost:${port}/api/docs`);
 }
 
 bootstrap();

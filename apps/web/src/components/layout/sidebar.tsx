@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -178,17 +179,43 @@ export function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b" style={{ borderColor: 'var(--wz-sidebar-border)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)', boxShadow: '0 0 15px rgba(99,102,241,0.35)' }}>
-          <span className="text-white font-bold text-sm">W</span>
-        </div>
-        <AnimatePresence>
-          {!sidebarCollapsed && (
-            <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.15 }}>
-              <div className="text-white font-bold text-base leading-none" style={{ fontFamily: 'Plus Jakarta Sans' }}>WorkZen</div>
-              <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ERP Platform</div>
+      <div className="flex items-center px-4 py-5 border-b" style={{ borderColor: 'var(--wz-sidebar-border)', minHeight: 72 }}>
+        <AnimatePresence mode="wait">
+          {sidebarCollapsed ? (
+            <motion.div
+              key="icon"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+              className="flex-shrink-0"
+            >
+              <Image
+                src="/logos/app-icon.svg"
+                alt="WorkZen"
+                width={36}
+                height={36}
+                unoptimized
+                style={{ borderRadius: 10 }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="wordmark"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.15 }}
+            >
+              <Image
+                src="/logos/we-sidebar-dark.svg"
+                alt="WorkZen ERP"
+                width={160}
+                height={42}
+                priority
+                unoptimized
+                style={{ height: 30, width: 'auto' }}
+              />
             </motion.div>
           )}
         </AnimatePresence>

@@ -4,7 +4,7 @@
 COMPLETE
 
 ## Commit Hash
-(see below — populated after commit)
+7408b7d
 
 ## What Was Done
 
