@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../common/prisma/prisma.service';
+import * as nodemailer from 'nodemailer';
 import { paginate, buildPaginatedResponse } from '../common/dto/pagination.dto';
 
 @Injectable()
@@ -47,6 +48,8 @@ export class WorkOrdersService {
   // ── Work Orders ───────────────────────────────────────────────────
   async findAll(tenantId: string, query: any) {
     const { page = 1, limit = 15, search, status, tenderId } = query;
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
     const where: any = { tenantId, deletedAt: null };
     if (status) where.status = status;
     if (tenderId) where.tenderId = tenderId;
@@ -64,11 +67,11 @@ export class WorkOrdersService {
           _count: { select: { positions: true, fulfillments: true, milestones: true } },
         },
         orderBy: { createdAt: 'desc' },
-        ...paginate(page, limit),
+        ...paginate(pageNum, limitNum),
       }),
       this.prisma.workOrder.count({ where }),
     ]);
-    return buildPaginatedResponse(data, total, page, limit);
+    return buildPaginatedResponse(data, total, pageNum, limitNum);
   }
 
   async findOne(tenantId: string, id: string) {
@@ -122,6 +125,11 @@ export class WorkOrdersService {
       where: { id },
       data: { ...dto, updatedBy: userId },
     });
+  }
+
+  async remove(tenantId: string, id: string) {
+    await this.findOne(tenantId, id);
+    return this.prisma.workOrder.update({ where: { id }, data: { deletedAt: new Date() } });
   }
 
   // ── Positions ─────────────────────────────────────────────────────
@@ -259,6 +267,37 @@ export class WorkOrdersService {
 
   async updateInvoiceStatus(tenantId: string, id: string, status: string) {
     return this.prisma.workOrderInvoice.update({ where: { id }, data: { status } });
+  }
+
+  // ── Email ──────────────────────────────────────────────────────────
+  async sendEmail(tenantId: string, id: string, email: string, type: 'work-order' | 'invoice') {
+    const wo = await this.findOne(tenantId, id);
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST ?? 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT ?? 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    const subject = type === 'invoice'
+      ? `Invoice from WorkZen — WO: ${wo.workOrderNo}`
+      : `Work Order: ${wo.workOrderNo} — ${wo.title}`;
+    const html = type === 'invoice'
+      ? `<p>Dear Sir/Madam,</p><p>Please find the invoice details for Work Order <strong>${wo.workOrderNo}</strong> attached.</p><p>Total invoices raised: ${(wo as any).woInvoices?.length ?? 0}</p><br><p>For any queries, please contact us.</p><p>Regards,<br>WorkZen Manpower Solutions Pvt. Ltd.</p>`
+      : `<p>Dear Sir/Madam,</p><p>Please find the Work Order details below:</p><ul><li><strong>WO Number:</strong> ${wo.workOrderNo}</li><li><strong>Title:</strong> ${wo.title}</li><li><strong>Value:</strong> ₹${Number(wo.value).toLocaleString('en-IN')}</li><li><strong>Period:</strong> ${wo.startDate ? new Date(wo.startDate).toLocaleDateString('en-IN') : '—'} to ${wo.endDate ? new Date(wo.endDate).toLocaleDateString('en-IN') : 'Open-ended'}</li><li><strong>Status:</strong> ${wo.status}</li></ul><br><p>Regards,<br>WorkZen Manpower Solutions Pvt. Ltd.</p>`;
+    try {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM ?? process.env.SMTP_USER,
+        to: email,
+        subject,
+        html,
+      });
+    } catch (err: any) {
+      throw new InternalServerErrorException(`Failed to send email: ${err.message}`);
+    }
+    return { sent: true, to: email };
   }
 
   // ── Payments ──────────────────────────────────────────────────────

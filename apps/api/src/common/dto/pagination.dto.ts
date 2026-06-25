@@ -32,6 +32,16 @@ export class PaginationDto {
   @IsOptional()
   @IsString()
   order?: 'asc' | 'desc' = 'desc';
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
 }
 
 export function paginate(page = 1, limit = 20) {

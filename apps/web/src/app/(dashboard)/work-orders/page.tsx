@@ -2,16 +2,17 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { DUMMY_WO_DASH, DUMMY_WO_DATA } from '@/lib/dummy-data';
 import { useForm } from 'react-hook-form';
 import { motion } from 'framer-motion';
 import {
-  Plus, X, Save, FileText, DollarSign, Users, CheckCircle2, Clock,
+  Plus, X, Save, FileText, DollarSign, Users, CheckCircle2,
   ChevronLeft, ChevronRight, AlertCircle, Target, CreditCard, RefreshCw,
+  Eye, Pencil, Trash2, Printer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { workOrdersApi, tendersApi, employeesApi } from '@/lib/api';
+import { DocumentModal } from '@/components/document-modal';
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 function Modal({ open, onClose, title, children, wide }: {
@@ -49,6 +50,8 @@ const STATUS_CFG: Record<string, { color: string; bg: string }> = {
   DRAFT:                { color: '#64748b', bg: 'rgba(100,116,139,0.1)' },
   CLOSED:               { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
   CANCELLED:            { color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
+  PENDING:              { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+  COMPLETED:            { color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
 };
 
 const INVOICE_STATUS_CFG: Record<string, { color: string; bg: string }> = {
@@ -60,6 +63,47 @@ const INVOICE_STATUS_CFG: Record<string, { color: string; bg: string }> = {
   REJECTED:       { color: '#f43f5e', bg: 'rgba(244,63,94,0.12)' },
 };
 
+// ─── WO Form Fields (shared Create + Edit) ────────────────────────────────────
+function WOFormFields({ form, tenders }: { form: any; tenders: any[] }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <F label="Tender *" span2>
+        <select {...form.register('tenderId')} className="input-field w-full">
+          <option value="">Select tender</option>
+          {tenders.map((t: any) => <option key={t.id} value={t.id}>{t.tenderName} — {t.tenderNumber}</option>)}
+        </select>
+      </F>
+      <F label="WO Number *">
+        <input {...form.register('workOrderNo')} className="input-field w-full" placeholder="WO/TN/2026/001" />
+      </F>
+      <F label="Govt Reference No.">
+        <input {...form.register('governmentRef')} className="input-field w-full" placeholder="GO(Ms) No. 123" />
+      </F>
+      <F label="Title *" span2>
+        <input {...form.register('title')} className="input-field w-full" placeholder="Supply of Security Personnel" />
+      </F>
+      <F label="WO Value (₹) *">
+        <input {...form.register('value', { valueAsNumber: true })} type="number" className="input-field w-full" placeholder="5000000" />
+      </F>
+      <F label="Sanctioned Strength">
+        <input {...form.register('sanctionedStrength', { valueAsNumber: true })} type="number" className="input-field w-full" placeholder="100" />
+      </F>
+      <F label="Issued Date">
+        <input {...form.register('issuedDate')} type="date" className="input-field w-full" />
+      </F>
+      <F label="Start Date *">
+        <input {...form.register('startDate')} type="date" className="input-field w-full" />
+      </F>
+      <F label="End Date">
+        <input {...form.register('endDate')} type="date" className="input-field w-full" />
+      </F>
+      <F label="Description" span2>
+        <textarea {...form.register('description')} rows={2} className="input-field w-full resize-none" placeholder="Scope of work..." />
+      </F>
+    </div>
+  );
+}
+
 type Tab = 'list' | 'detail';
 
 export default function WorkOrdersPage() {
@@ -70,14 +114,17 @@ export default function WorkOrdersPage() {
   const [page, setPage] = useState(1);
 
   // Modals
-  const [showWOModal, setShowWOModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editWO, setEditWO] = useState<any>(null);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showAmendModal, setShowAmendModal] = useState(false);
   const [showFulfillModal, setShowFulfillModal] = useState(false);
+  const [docModal, setDocModal] = useState<{ type: 'work-order' | 'invoice'; inv?: any } | null>(null);
 
   const woForm = useForm<any>();
+  const editForm = useForm<any>();
   const msForm = useForm<any>();
   const invForm = useForm<any>();
   const payForm = useForm<any>();
@@ -85,14 +132,13 @@ export default function WorkOrdersPage() {
   const fulfillForm = useForm<any>();
 
   // ── Queries ──────────────────────────────────────────────────────
-  const { data: dash } = useQuery({ queryKey: ['wo-dash'], queryFn: workOrdersApi.dashboard, placeholderData: DUMMY_WO_DASH });
+  const { data: dash } = useQuery({ queryKey: ['wo-dash'], queryFn: workOrdersApi.dashboard });
   const { data: woData, isLoading } = useQuery({
     queryKey: ['work-orders', page],
-    queryFn: () => workOrdersApi.list({ page, limit: 15 }),
+    queryFn: () => workOrdersApi.list(),
     enabled: tab === 'list',
-    placeholderData: DUMMY_WO_DATA,
   });
-  const { data: woDetail } = useQuery({
+  const { data: woDetail, isLoading: loadingDetail } = useQuery({
     queryKey: ['wo-detail', selectedWO?.id],
     queryFn: () => workOrdersApi.get(selectedWO.id),
     enabled: !!selectedWO?.id && tab === 'detail',
@@ -100,23 +146,33 @@ export default function WorkOrdersPage() {
   const { data: tenders = [] } = useQuery({
     queryKey: ['tenders-select-all'],
     queryFn: tendersApi.selectAll,
-    enabled: showWOModal,
+    enabled: showCreateModal || !!editWO,
   });
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-select-all'],
-    queryFn: () => employeesApi.selectAll('ACTIVE'),
+    queryFn: () => employeesApi.selectAll(),
     enabled: showFulfillModal,
   });
 
-  const wos = (woData as any)?.data?.length ? (woData as any).data : DUMMY_WO_DATA.data;
+  const wos: any[] = (woData as any)?.data ?? [];
   const meta = (woData as any)?.meta;
   const d = dash as any;
 
   // ── Mutations ─────────────────────────────────────────────────────
   const createWOMut = useMutation({
     mutationFn: (data: any) => workOrdersApi.create(data),
-    onSuccess: () => { toast.success('Work order created'); qc.invalidateQueries({ queryKey: ['work-orders'] }); qc.invalidateQueries({ queryKey: ['wo-dash'] }); setShowWOModal(false); woForm.reset(); },
+    onSuccess: () => { toast.success('Work order created'); qc.invalidateQueries({ queryKey: ['work-orders'] }); qc.invalidateQueries({ queryKey: ['wo-dash'] }); setShowCreateModal(false); woForm.reset(); },
     onError: (e: any) => toast.error(e.response?.data?.error?.message ?? 'Failed'),
+  });
+  const updateWOMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => workOrdersApi.update(id, data),
+    onSuccess: () => { toast.success('Work order updated'); qc.invalidateQueries({ queryKey: ['work-orders'] }); qc.invalidateQueries({ queryKey: ['wo-detail', editWO?.id] }); setEditWO(null); editForm.reset(); },
+    onError: (e: any) => toast.error(e.response?.data?.error?.message ?? 'Failed'),
+  });
+  const deleteWOMut = useMutation({
+    mutationFn: (id: string) => workOrdersApi.remove(id),
+    onSuccess: () => { toast.success('Work order deleted'); qc.invalidateQueries({ queryKey: ['work-orders'] }); qc.invalidateQueries({ queryKey: ['wo-dash'] }); if (tab === 'detail') { setTab('list'); setSelectedWO(null); } },
+    onError: () => toast.error('Failed to delete work order'),
   });
   const createMsMut = useMutation({
     mutationFn: (data: any) => workOrdersApi.createMilestone(selectedWO.id, data),
@@ -149,8 +205,29 @@ export default function WorkOrdersPage() {
   });
 
   const openDetail = (wo: any) => { setSelectedWO(wo); setTab('detail'); setInnerTab('overview'); };
+  const openEdit = (wo: any) => {
+    setEditWO(wo);
+    editForm.reset({
+      tenderId: wo.tender?.id ?? wo.tenderId ?? '',
+      workOrderNo: wo.workOrderNo ?? '',
+      governmentRef: wo.governmentRef ?? '',
+      title: wo.title ?? '',
+      value: wo.value ? Number(wo.value) : undefined,
+      sanctionedStrength: wo.sanctionedStrength ?? undefined,
+      issuedDate: wo.issuedDate ? wo.issuedDate.slice(0, 10) : '',
+      startDate: wo.startDate ? wo.startDate.slice(0, 10) : '',
+      endDate: wo.endDate ? wo.endDate.slice(0, 10) : '',
+      description: wo.description ?? '',
+    });
+  };
 
   const wo = woDetail as any;
+
+  const handleSendEmail = async (email: string, type: string) => {
+    const id = type === 'invoice' ? docModal?.inv?.id : wo?.id;
+    if (!id) throw new Error('No ID');
+    await workOrdersApi.sendEmail(id, email, type as any);
+  };
 
   const INNER_TABS = [
     { id: 'overview', label: 'Overview' },
@@ -164,49 +241,39 @@ export default function WorkOrdersPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Document Modal (print/PDF/email/WA) ───────────────────── */}
+      {docModal && (
+        <DocumentModal
+          type={docModal.type}
+          woData={wo ?? selectedWO}
+          invData={docModal.inv}
+          onClose={() => setDocModal(null)}
+          onSendEmail={handleSendEmail}
+        />
+      )}
+
       {/* ── Create WO Modal ────────────────────────────────────────── */}
-      <Modal open={showWOModal} onClose={() => { setShowWOModal(false); woForm.reset(); }} title="New Work Order" wide>
+      <Modal open={showCreateModal} onClose={() => { setShowCreateModal(false); woForm.reset(); }} title="New Work Order" wide>
         <form onSubmit={woForm.handleSubmit(d => createWOMut.mutate(d))} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <F label="Tender *" span2>
-              <select {...woForm.register('tenderId')} className="input-field w-full">
-                <option value="">Select tender</option>
-                {(tenders as any[]).map((t: any) => <option key={t.id} value={t.id}>{t.tenderName} — {t.tenderNumber}</option>)}
-              </select>
-            </F>
-            <F label="WO Number *">
-              <input {...woForm.register('workOrderNo')} className="input-field w-full" placeholder="WO/TN/2026/001" />
-            </F>
-            <F label="Govt Reference No.">
-              <input {...woForm.register('governmentRef')} className="input-field w-full" placeholder="GO(Ms) No. 123" />
-            </F>
-            <F label="Title *" span2>
-              <input {...woForm.register('title')} className="input-field w-full" placeholder="Supply of Security Personnel" />
-            </F>
-            <F label="WO Value (₹) *">
-              <input {...woForm.register('value', { valueAsNumber: true })} type="number" className="input-field w-full" placeholder="5000000" />
-            </F>
-            <F label="Sanctioned Strength">
-              <input {...woForm.register('sanctionedStrength', { valueAsNumber: true })} type="number" className="input-field w-full" placeholder="100" />
-            </F>
-            <F label="Issued Date">
-              <input {...woForm.register('issuedDate')} type="date" className="input-field w-full" />
-            </F>
-            <F label="Start Date *">
-              <input {...woForm.register('startDate')} type="date" className="input-field w-full" />
-            </F>
-            <F label="End Date">
-              <input {...woForm.register('endDate')} type="date" className="input-field w-full" />
-            </F>
-          </div>
-          <F label="Description">
-            <textarea {...woForm.register('description')} rows={2} className="input-field w-full resize-none" placeholder="Scope of work..." />
-          </F>
+          <WOFormFields form={woForm} tenders={tenders as any[]} />
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn-primary flex-1" disabled={createWOMut.isPending}>
               <Save size={14} /> {createWOMut.isPending ? 'Creating...' : 'Create Work Order'}
             </button>
-            <button type="button" className="btn-secondary" onClick={() => setShowWOModal(false)}>Cancel</button>
+            <button type="button" className="btn-secondary" onClick={() => setShowCreateModal(false)}>Cancel</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Edit WO Modal ──────────────────────────────────────────── */}
+      <Modal open={!!editWO} onClose={() => { setEditWO(null); editForm.reset(); }} title="Edit Work Order" wide>
+        <form onSubmit={editForm.handleSubmit(d => updateWOMut.mutate({ id: editWO.id, data: d }))} className="space-y-4">
+          <WOFormFields form={editForm} tenders={tenders as any[]} />
+          <div className="flex gap-2 pt-2">
+            <button type="submit" className="btn-primary flex-1" disabled={updateWOMut.isPending}>
+              <Save size={14} /> {updateWOMut.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => { setEditWO(null); editForm.reset(); }}>Cancel</button>
           </div>
         </form>
       </Modal>
@@ -411,10 +478,16 @@ export default function WorkOrdersPage() {
           </p>
         </div>
         {tab === 'list' && (
-          <button className="btn-primary" onClick={() => setShowWOModal(true)}><Plus size={16} /> New Work Order</button>
+          <button className="btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={16} /> New Work Order</button>
         )}
-        {tab === 'detail' && (
-          <div className="flex gap-2">
+        {tab === 'detail' && wo && (
+          <div className="flex gap-2 flex-wrap">
+            <button className="btn-secondary" onClick={() => openEdit(wo)}><Pencil size={14} /> Edit</button>
+            <button className="btn-secondary" onClick={() => { if (confirm('Delete this work order?')) deleteWOMut.mutate(wo.id); }}
+              style={{ color: '#f87171', borderColor: 'rgba(244,63,94,0.3)' }}>
+              <Trash2 size={14} /> Delete
+            </button>
+            <button className="btn-secondary" onClick={() => setDocModal({ type: 'work-order' })}><Printer size={14} /> Print / Share</button>
             <button className="btn-secondary" onClick={() => setShowAmendModal(true)}><RefreshCw size={14} /> Amendment</button>
             <button className="btn-secondary" onClick={() => setShowFulfillModal(true)}><Users size={14} /> Deploy Staff</button>
             <button className="btn-secondary" onClick={() => setShowMilestoneModal(true)}><Target size={14} /> Add Milestone</button>
@@ -453,7 +526,7 @@ export default function WorkOrdersPage() {
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                {['WO Number', 'Title', 'Tender', 'Value', 'Strength', 'Period', 'Status', ''].map(h => (
+                {['WO Number', 'Title', 'Tender', 'Value', 'Strength', 'Period', 'Status', 'Actions'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
                 ))}
               </tr>
@@ -467,19 +540,42 @@ export default function WorkOrdersPage() {
               {!isLoading && wos.map((w: any) => {
                 const cfg = STATUS_CFG[w.status] ?? STATUS_CFG.DRAFT;
                 return (
-                  <tr key={w.id} className="group hover:bg-white/[0.015] transition-colors cursor-pointer"
-                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                    onClick={() => openDetail(w)}>
-                    <td className="px-4 py-3"><p className="text-sm font-mono" style={{ color: '#818cf8' }}>{w.workOrderNo}</p></td>
-                    <td className="px-4 py-3"><p className="text-sm font-medium text-white">{w.title}</p></td>
-                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{w.tender?.tenderName?.substring(0, 25)}…</td>
-                    <td className="px-4 py-3 text-sm font-medium" style={{ color: '#fbbf24' }}>{formatCurrency(Number(w.value))}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{w.sanctionedStrength}</td>
-                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{formatDate(w.startDate)} → {w.endDate ? formatDate(w.endDate) : '∞'}</td>
+                  <tr key={w.id} className="group hover:bg-white/[0.015] transition-colors"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                    <td className="px-4 py-3"><p className="text-sm font-mono" style={{ color: '#818cf8' }}>{w.workOrderNo ?? '—'}</p></td>
                     <td className="px-4 py-3">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: cfg.bg, color: cfg.color }}>{w.status.replace('_', ' ')}</span>
+                      <p className="text-sm font-medium text-white">{w.title}</p>
+                      {w.governmentRef && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{w.governmentRef}</p>}
                     </td>
-                    <td className="px-4 py-3 text-xs opacity-0 group-hover:opacity-100" style={{ color: '#818cf8' }}>View →</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                      {w.tender?.tenderName ? w.tender.tenderName.substring(0, 28) + (w.tender.tenderName.length > 28 ? '…' : '') : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium" style={{ color: '#fbbf24' }}>{formatCurrency(Number(w.value))}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{w.sanctionedStrength ?? '—'}</td>
+                    <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {formatDate(w.startDate)}{w.endDate ? ` → ${formatDate(w.endDate)}` : ''}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: cfg.bg, color: cfg.color }}>
+                        {w.status?.replace(/_/g, ' ')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button title="View" onClick={() => openDetail(w)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                          <Eye size={14} />
+                        </button>
+                        <button title="Edit" onClick={() => openEdit(w)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#818cf8' }}>
+                          <Pencil size={14} />
+                        </button>
+                        <button title="Delete" onClick={() => { if (confirm('Delete this work order? This cannot be undone.')) deleteWOMut.mutate(w.id); }}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#f87171' }}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -488,7 +584,7 @@ export default function WorkOrdersPage() {
                   <FileText size={36} className="mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
                   <p className="text-white font-medium mb-1">No work orders yet</p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Create a work order from a won tender</p>
-                  <button className="btn-primary" onClick={() => setShowWOModal(true)}><Plus size={14} /> New Work Order</button>
+                  <button className="btn-primary" onClick={() => setShowCreateModal(true)}><Plus size={14} /> New Work Order</button>
                 </td></tr>
               )}
             </tbody>
@@ -507,260 +603,274 @@ export default function WorkOrdersPage() {
       )}
 
       {/* ── Detail View ─────────────────────────────────────────────── */}
-      {tab === 'detail' && wo && (
+      {tab === 'detail' && (
         <div className="space-y-4">
-          {/* Inner tab bar */}
-          <div className="flex gap-1 p-1 rounded-xl w-fit flex-wrap" style={{ background: 'rgba(255,255,255,0.04)' }}>
-            {INNER_TABS.map(t => (
-              <button key={t.id} onClick={() => setInnerTab(t.id)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-                style={{ background: innerTab === t.id ? 'rgba(99,102,241,0.2)' : 'transparent', color: innerTab === t.id ? '#818cf8' : 'rgba(255,255,255,0.5)' }}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Overview */}
-          {innerTab === 'overview' && (
-            <div className="grid lg:grid-cols-3 gap-4">
-              <div className="glass-card p-5 lg:col-span-2 space-y-4">
-                <h3 className="font-semibold text-white text-sm">Work Order Details</h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  {[
-                    { l: 'WO Number', v: wo.workOrderNo },
-                    { l: 'Govt Reference', v: wo.governmentRef ?? '—' },
-                    { l: 'Tender', v: `${wo.tender?.tenderName}` },
-                    { l: 'Total Value', v: formatCurrency(Number(wo.value)) },
-                    { l: 'Sanctioned Strength', v: wo.sanctionedStrength },
-                    { l: 'Version', v: `v${wo.currentVersion}` },
-                    { l: 'Start Date', v: formatDate(wo.startDate) },
-                    { l: 'End Date', v: wo.endDate ? formatDate(wo.endDate) : 'Open-ended' },
-                    { l: 'Status', v: wo.status.replace('_', ' ') },
-                  ].map(({ l, v }) => (
-                    <div key={l}>
-                      <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{l}</p>
-                      <p className="font-medium text-white">{String(v)}</p>
-                    </div>
-                  ))}
-                </div>
-                {wo.description && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{wo.description}</p>}
-              </div>
-              <div className="space-y-4">
-                {[
-                  { label: 'Milestones', value: wo.milestones?.length ?? 0, color: '#818cf8' },
-                  { label: 'Deployed Staff', value: wo.fulfillments?.filter((f: any) => f.status === 'ACTIVE').length ?? 0, color: '#10b981' },
-                  { label: 'Invoices Raised', value: wo.woInvoices?.length ?? 0, color: '#f59e0b' },
-                  { label: 'Payments Received', value: wo.woPayments?.length ?? 0, color: '#3b82f6' },
-                ].map(s => (
-                  <div key={s.label} className="glass-card p-4 flex items-center justify-between">
-                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.label}</p>
-                    <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: 'Plus Jakarta Sans' }}>{s.value}</p>
-                  </div>
-                ))}
-              </div>
+          {loadingDetail && (
+            <div className="glass-card p-10 text-center">
+              <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>Loading work order…</p>
             </div>
           )}
-
-          {/* Positions */}
-          {innerTab === 'positions' && (
-            <div className="glass-card overflow-hidden">
-              <table className="w-full">
-                <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {['Designation', 'Required', 'Deployed', 'Rate', 'Rate Type'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
-                  ))}
-                </tr></thead>
-                <tbody>
-                  {(wo.positions ?? []).map((p: any) => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td className="px-4 py-3 text-sm font-medium text-white">{p.designation}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{p.requiredCount}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-sm font-medium ${p.deployedCount < p.requiredCount ? 'text-yellow-400' : 'text-green-400'}`}>{p.deployedCount}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: '#fbbf24' }}>{formatCurrency(Number(p.rate))}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{p.rateType}</td>
-                    </tr>
-                  ))}
-                  {(wo.positions ?? []).length === 0 && (
-                    <tr><td colSpan={5} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No positions defined</td></tr>
-                  )}
-                </tbody>
-              </table>
+          {!loadingDetail && wo && (<>
+            {/* Inner tab bar */}
+            <div className="flex gap-1 p-1 rounded-xl w-fit flex-wrap" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              {INNER_TABS.map(t => (
+                <button key={t.id} onClick={() => setInnerTab(t.id)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
+                  style={{ background: innerTab === t.id ? 'rgba(99,102,241,0.2)' : 'transparent', color: innerTab === t.id ? '#818cf8' : 'rgba(255,255,255,0.5)' }}>
+                  {t.label}
+                </button>
+              ))}
             </div>
-          )}
 
-          {/* Milestones */}
-          {innerTab === 'milestones' && (
-            <div className="space-y-3">
-              {(wo.milestones ?? []).map((m: any) => {
-                const pct = { PENDING: 0, IN_PROGRESS: 33, COMPLETED: 66, INVOICED: 80, PAID: 100 }[m.status] ?? 0;
-                const color = m.status === 'PAID' ? '#10b981' : m.status === 'INVOICED' ? '#f59e0b' : '#6366f1';
-                return (
-                  <div key={m.id} className="glass-card p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-semibold text-white text-sm">{m.title}</p>
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                          {m.percentage}% · {formatCurrency(Number(m.amount))} {m.dueDate ? `· Due ${formatDate(m.dueDate)}` : ''}
-                        </p>
+            {/* Overview */}
+            {innerTab === 'overview' && (
+              <div className="grid lg:grid-cols-3 gap-4">
+                <div className="glass-card p-5 lg:col-span-2 space-y-4">
+                  <h3 className="font-semibold text-white text-sm">Work Order Details</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {[
+                      { l: 'WO Number', v: wo.workOrderNo },
+                      { l: 'Govt Reference', v: wo.governmentRef ?? '—' },
+                      { l: 'Tender', v: `${wo.tender?.tenderName ?? '—'}` },
+                      { l: 'Total Value', v: formatCurrency(Number(wo.value)) },
+                      { l: 'Sanctioned Strength', v: wo.sanctionedStrength ?? '—' },
+                      { l: 'Version', v: `v${wo.currentVersion}` },
+                      { l: 'Start Date', v: formatDate(wo.startDate) },
+                      { l: 'End Date', v: wo.endDate ? formatDate(wo.endDate) : 'Open-ended' },
+                      { l: 'Status', v: wo.status?.replace(/_/g, ' ') },
+                    ].map(({ l, v }) => (
+                      <div key={l}>
+                        <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{l}</p>
+                        <p className="font-medium text-white">{String(v)}</p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: `${color}15`, color }}>
-                        {m.status.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
-                    </div>
+                    ))}
                   </div>
-                );
-              })}
-              {(wo.milestones ?? []).length === 0 && (
-                <div className="glass-card p-8 text-center">
-                  <Target size={36} className="mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
-                  <p className="text-white font-medium mb-1">No milestones</p>
-                  <button className="btn-primary mt-3" onClick={() => setShowMilestoneModal(true)}><Plus size={14} /> Add Milestone</button>
+                  {wo.description && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{wo.description}</p>}
                 </div>
-              )}
-            </div>
-          )}
+                <div className="space-y-4">
+                  {[
+                    { label: 'Milestones', value: wo.milestones?.length ?? 0, color: '#818cf8' },
+                    { label: 'Deployed Staff', value: wo.fulfillments?.filter((f: any) => f.status === 'ACTIVE').length ?? 0, color: '#10b981' },
+                    { label: 'Invoices Raised', value: wo.woInvoices?.length ?? 0, color: '#f59e0b' },
+                    { label: 'Payments Received', value: wo.woPayments?.length ?? 0, color: '#3b82f6' },
+                  ].map(s => (
+                    <div key={s.label} className="glass-card p-4 flex items-center justify-between">
+                      <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{s.label}</p>
+                      <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: 'Plus Jakarta Sans' }}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Deployed Staff */}
-          {innerTab === 'fulfillments' && (
-            <div className="glass-card overflow-hidden">
-              <table className="w-full">
-                <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {['Employee', 'Position', 'Deployed On', 'Status'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
-                  ))}
-                </tr></thead>
-                <tbody>
-                  {(wo.fulfillments ?? []).map((f: any) => (
-                    <tr key={f.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td className="px-4 py-3">
-                        <p className="text-sm font-medium text-white">{f.employee?.firstName} {f.employee?.lastName}</p>
-                        <p className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{f.employee?.employeeCode}</p>
-                      </td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{f.position?.designation}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(f.deployedDate)}</td>
-                      <td className="px-4 py-3">
-                        <span className="px-2.5 py-1 rounded-lg text-xs font-medium"
-                          style={{ background: f.status === 'ACTIVE' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.06)', color: f.status === 'ACTIVE' ? '#10b981' : 'rgba(255,255,255,0.4)' }}>
-                          {f.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {(wo.fulfillments ?? []).length === 0 && (
-                    <tr><td colSpan={4} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No staff deployed yet</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Invoices */}
-          {innerTab === 'invoices' && (
-            <div className="glass-card overflow-hidden">
-              <table className="w-full">
-                <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {['Invoice No.', 'Period', 'Deployed', 'Amount', 'GST', 'Total', 'Paid', 'Status', ''].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
-                  ))}
-                </tr></thead>
-                <tbody>
-                  {(wo.woInvoices ?? []).map((inv: any) => {
-                    const cfg = INVOICE_STATUS_CFG[inv.status] ?? INVOICE_STATUS_CFG.DRAFT;
-                    return (
-                      <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td className="px-4 py-3 text-sm font-mono" style={{ color: '#818cf8' }}>{inv.invoiceNumber}</td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{inv.period}</td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{inv.deployedCount}</td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{formatCurrency(Number(inv.amount))}</td>
-                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{formatCurrency(Number(inv.gstAmount))}</td>
-                        <td className="px-4 py-3 text-sm font-medium" style={{ color: '#fbbf24' }}>{formatCurrency(Number(inv.totalAmount))}</td>
-                        <td className="px-4 py-3 text-sm" style={{ color: '#10b981' }}>{formatCurrency(Number(inv.paidAmount))}</td>
+            {/* Positions */}
+            {innerTab === 'positions' && (
+              <div className="glass-card overflow-hidden">
+                <table className="w-full">
+                  <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    {['Designation', 'Required', 'Deployed', 'Rate', 'Rate Type'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {(wo.positions ?? []).map((p: any) => (
+                      <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td className="px-4 py-3 text-sm font-medium text-white">{p.designation}</td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{p.requiredCount}</td>
                         <td className="px-4 py-3">
-                          <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: cfg.bg, color: cfg.color }}>{inv.status}</span>
+                          <span className={`text-sm font-medium ${p.deployedCount < p.requiredCount ? 'text-yellow-400' : 'text-green-400'}`}>{p.deployedCount}</span>
                         </td>
+                        <td className="px-4 py-3 text-sm" style={{ color: '#fbbf24' }}>{formatCurrency(Number(p.rate))}</td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{p.rateType}</td>
+                      </tr>
+                    ))}
+                    {(wo.positions ?? []).length === 0 && (
+                      <tr><td colSpan={5} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No positions defined</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Milestones */}
+            {innerTab === 'milestones' && (
+              <div className="space-y-3">
+                {(wo.milestones ?? []).map((m: any) => {
+                  const pct = { PENDING: 0, IN_PROGRESS: 33, COMPLETED: 66, INVOICED: 80, PAID: 100 }[m.status as string] ?? 0;
+                  const color = m.status === 'PAID' ? '#10b981' : m.status === 'INVOICED' ? '#f59e0b' : '#6366f1';
+                  return (
+                    <div key={m.id} className="glass-card p-5">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="font-semibold text-white text-sm">{m.title}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            {m.percentage}% · {formatCurrency(Number(m.amount))} {m.dueDate ? `· Due ${formatDate(m.dueDate)}` : ''}
+                          </p>
+                        </div>
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: `${color}15`, color }}>
+                          {m.status?.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {(wo.milestones ?? []).length === 0 && (
+                  <div className="glass-card p-8 text-center">
+                    <Target size={36} className="mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
+                    <p className="text-white font-medium mb-1">No milestones</p>
+                    <button className="btn-primary mt-3" onClick={() => setShowMilestoneModal(true)}><Plus size={14} /> Add Milestone</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Deployed Staff */}
+            {innerTab === 'fulfillments' && (
+              <div className="glass-card overflow-hidden">
+                <table className="w-full">
+                  <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    {['Employee', 'Position', 'Deployed On', 'Status'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {(wo.fulfillments ?? []).map((f: any) => (
+                      <tr key={f.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                         <td className="px-4 py-3">
-                          {inv.status === 'DRAFT' && (
-                            <button onClick={() => updateInvStatusMut.mutate({ id: inv.id, status: 'SUBMITTED' })}
-                              className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
-                              Submit
-                            </button>
-                          )}
+                          <p className="text-sm font-medium text-white">{f.employee?.firstName} {f.employee?.lastName}</p>
+                          <p className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{f.employee?.employeeCode}</p>
+                        </td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{f.position?.designation}</td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(f.deployedDate)}</td>
+                        <td className="px-4 py-3">
+                          <span className="px-2.5 py-1 rounded-lg text-xs font-medium"
+                            style={{ background: f.status === 'ACTIVE' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.06)', color: f.status === 'ACTIVE' ? '#10b981' : 'rgba(255,255,255,0.4)' }}>
+                            {f.status}
+                          </span>
                         </td>
                       </tr>
-                    );
-                  })}
-                  {(wo.woInvoices ?? []).length === 0 && (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No invoices raised yet</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Payments */}
-          {innerTab === 'payments' && (
-            <div className="glass-card overflow-hidden">
-              <div className="p-4 flex justify-end" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <button className="btn-primary" onClick={() => setShowPaymentModal(true)}><Plus size={14} /> Record Payment</button>
+                    ))}
+                    {(wo.fulfillments ?? []).length === 0 && (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No staff deployed yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <table className="w-full">
-                <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {['Date', 'Invoice', 'Amount', 'Mode', 'Reference', 'Remarks'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
-                  ))}
-                </tr></thead>
-                <tbody>
-                  {(wo.woPayments ?? []).map((pay: any) => (
-                    <tr key={pay.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(pay.paymentDate)}</td>
-                      <td className="px-4 py-3 text-sm font-mono" style={{ color: '#818cf8' }}>{pay.invoice?.invoiceNumber ?? '—'}</td>
-                      <td className="px-4 py-3 text-sm font-medium" style={{ color: '#10b981' }}>{formatCurrency(Number(pay.amount))}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{pay.paymentMode}</td>
-                      <td className="px-4 py-3 text-sm font-mono" style={{ color: 'rgba(255,255,255,0.4)' }}>{pay.referenceNumber ?? '—'}</td>
-                      <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{pay.remarks ?? '—'}</td>
-                    </tr>
-                  ))}
-                  {(wo.woPayments ?? []).length === 0 && (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No payments recorded yet</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+            )}
 
-          {/* Amendments */}
-          {innerTab === 'amendments' && (
-            <div className="space-y-3">
-              {(wo.amendments ?? []).map((a: any) => (
-                <div key={a.id} className="glass-card p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-white text-sm">Amendment v{a.version} {a.amendmentRef ? `· ${a.amendmentRef}` : ''}</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Effective: {formatDate(a.effectiveDate)}</p>
+            {/* Invoices */}
+            {innerTab === 'invoices' && (
+              <div className="glass-card overflow-hidden">
+                <table className="w-full">
+                  <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    {['Invoice No.', 'Period', 'Deployed', 'Amount', 'GST', 'Total', 'Paid', 'Status', ''].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {(wo.woInvoices ?? []).map((inv: any) => {
+                      const cfg = INVOICE_STATUS_CFG[inv.status] ?? INVOICE_STATUS_CFG.DRAFT;
+                      return (
+                        <tr key={inv.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                          <td className="px-4 py-3 text-sm font-mono" style={{ color: '#818cf8' }}>{inv.invoiceNumber}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{inv.period}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{inv.deployedCount}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{formatCurrency(Number(inv.amount))}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{formatCurrency(Number(inv.gstAmount))}</td>
+                          <td className="px-4 py-3 text-sm font-medium" style={{ color: '#fbbf24' }}>{formatCurrency(Number(inv.totalAmount))}</td>
+                          <td className="px-4 py-3 text-sm" style={{ color: '#10b981' }}>{formatCurrency(Number(inv.paidAmount))}</td>
+                          <td className="px-4 py-3">
+                            <span className="px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: cfg.bg, color: cfg.color }}>{inv.status}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1.5">
+                              {inv.status === 'DRAFT' && (
+                                <button onClick={() => updateInvStatusMut.mutate({ id: inv.id, status: 'SUBMITTED' })}
+                                  className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
+                                  Submit
+                                </button>
+                              )}
+                              <button title="Print / Share Invoice" onClick={() => setDocModal({ type: 'invoice', inv })}
+                                className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                                <Printer size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {(wo.woInvoices ?? []).length === 0 && (
+                      <tr><td colSpan={9} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No invoices raised yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Payments */}
+            {innerTab === 'payments' && (
+              <div className="glass-card overflow-hidden">
+                <div className="p-4 flex justify-end" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <button className="btn-primary" onClick={() => setShowPaymentModal(true)}><Plus size={14} /> Record Payment</button>
+                </div>
+                <table className="w-full">
+                  <thead><tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    {['Date', 'Invoice', 'Amount', 'Mode', 'Reference', 'Remarks'].map(h => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
+                    ))}
+                  </tr></thead>
+                  <tbody>
+                    {(wo.woPayments ?? []).map((pay: any) => (
+                      <tr key={pay.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>{formatDate(pay.paymentDate)}</td>
+                        <td className="px-4 py-3 text-sm font-mono" style={{ color: '#818cf8' }}>{pay.invoice?.invoiceNumber ?? '—'}</td>
+                        <td className="px-4 py-3 text-sm font-medium" style={{ color: '#10b981' }}>{formatCurrency(Number(pay.amount))}</td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{pay.paymentMode}</td>
+                        <td className="px-4 py-3 text-sm font-mono" style={{ color: 'rgba(255,255,255,0.4)' }}>{pay.referenceNumber ?? '—'}</td>
+                        <td className="px-4 py-3 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{pay.remarks ?? '—'}</td>
+                      </tr>
+                    ))}
+                    {(wo.woPayments ?? []).length === 0 && (
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No payments recorded yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Amendments */}
+            {innerTab === 'amendments' && (
+              <div className="space-y-3">
+                {(wo.amendments ?? []).map((a: any) => (
+                  <div key={a.id} className="glass-card p-5">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-semibold text-white text-sm">Amendment v{a.version} {a.amendmentRef ? `· ${a.amendmentRef}` : ''}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Effective: {formatDate(a.effectiveDate)}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>{a.changeDescription}</p>
+                    <div className="flex flex-wrap gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {a.previousValue && <span>Value: {formatCurrency(Number(a.previousValue))} → {formatCurrency(Number(a.newValue))}</span>}
+                      {a.previousStrength && <span>Strength: {a.previousStrength} → {a.newStrength}</span>}
+                      {a.previousEndDate && <span>End Date: {formatDate(a.previousEndDate)} → {formatDate(a.newEndDate)}</span>}
                     </div>
                   </div>
-                  <p className="text-sm mb-3" style={{ color: 'rgba(255,255,255,0.6)' }}>{a.changeDescription}</p>
-                  <div className="flex flex-wrap gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    {a.previousValue && <span>Value: {formatCurrency(Number(a.previousValue))} → {formatCurrency(Number(a.newValue))}</span>}
-                    {a.previousStrength && <span>Strength: {a.previousStrength} → {a.newStrength}</span>}
-                    {a.previousEndDate && <span>End Date: {formatDate(a.previousEndDate)} → {formatDate(a.newEndDate)}</span>}
+                ))}
+                {(wo.amendments ?? []).length === 0 && (
+                  <div className="glass-card p-8 text-center">
+                    <AlertCircle size={36} className="mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
+                    <p className="text-white font-medium mb-1">No amendments</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Record when Govt revises scope, value or duration</p>
                   </div>
-                </div>
-              ))}
-              {(wo.amendments ?? []).length === 0 && (
-                <div className="glass-card p-8 text-center">
-                  <AlertCircle size={36} className="mx-auto mb-3" style={{ color: 'rgba(255,255,255,0.1)' }} />
-                  <p className="text-white font-medium mb-1">No amendments</p>
-                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>Record when Govt revises scope, value or duration</p>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </>)}
         </div>
       )}
     </div>

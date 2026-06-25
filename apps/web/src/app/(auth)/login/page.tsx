@@ -206,10 +206,10 @@ export default function LoginPage() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
               {[
-                { label: 'Super Admin', email: 'admin@workzen.in' },
-                { label: 'HR Manager',  email: 'hr@workzen.in' },
-                { label: 'Payroll',     email: 'payroll@workzen.in' },
-                { label: 'Finance',     email: 'finance@workzen.in' },
+                { label: 'Super Admin',    email: 'admin@workzen.in' },
+                { label: 'HR Manager',     email: 'hr@workzen.in' },
+                { label: 'Payroll Mgr',    email: 'payroll@workzen.in' },
+                { label: 'Finance Mgr',    email: 'finance@workzen.in' },
               ].map(d => (
                 <button key={d.email} onClick={() => fillDemo(d.email, 'Admin@123!')}
                   style={{
@@ -227,15 +227,15 @@ export default function LoginPage() {
             {/* Divider */}
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '8px 0' }} />
 
-            {/* Supervisor roles */}
+            {/* Supervisor */}
             <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-              Site Supervisors · <code style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal' }}>Supervisor@123</code>
+              Site · <code style={{ color: 'rgba(52,211,153,0.7)', fontStyle: 'normal' }}>Admin@123!</code>
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {[
-                { label: 'Supervisor', email: 'supervisor@workzen.in', password: 'Supervisor@123' },
+                { label: 'Site Supervisor', email: 'supervisor@workzen.in' },
               ].map(d => (
-                <button key={d.email} onClick={() => fillDemo(d.email, d.password)}
+                <button key={d.email} onClick={() => fillDemo(d.email, 'Admin@123!')}
                   style={{
                     background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
                     borderRadius: 8, padding: '4px 10px', color: '#34d399', fontSize: 12,
@@ -259,7 +259,7 @@ export default function LoginPage() {
               <input
                 {...register('email')}
                 type="email"
-                placeholder="admin@workzen.in"
+                placeholder="admin@workzen.redonix.in"
                 autoComplete="email"
                 style={{
                   width: '100%', boxSizing: 'border-box',

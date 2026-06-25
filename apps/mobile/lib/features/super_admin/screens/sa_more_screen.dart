@@ -11,6 +11,12 @@ class SaMoreScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = [
       _MoreItemData(
+        label: 'Work Orders',
+        icon: Icons.assignment_outlined,
+        color: const Color(0xFF818CF8),
+        onTap: () => context.go('/sa/work-orders'),
+      ),
+      _MoreItemData(
         label: 'Clients',
         icon: Icons.business_outlined,
         color: const Color(0xFF60A5FA),

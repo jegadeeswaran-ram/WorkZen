@@ -9,11 +9,11 @@ import { TenderStatus } from '@prisma/client';
 export class TendersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(tenantId: string, query: PaginationDto & { status?: TenderStatus }) {
+  async findAll(tenantId: string, query: PaginationDto) {
     const { page = 1, limit = 20, search, status } = query;
     const where = {
       tenantId,
-      ...(status && { status }),
+      ...(status && { status: status as TenderStatus }),
       ...(search && {
         OR: [
           { tenderNumber: { contains: search, mode: 'insensitive' as const } },

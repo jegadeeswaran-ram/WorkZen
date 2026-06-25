@@ -1958,6 +1958,357 @@ async function main() {
     });
   }
 
+  // ── 32. Holidays ────────────────────────────────────────────────────────────
+  console.log('Creating holidays...');
+  const holidayData = [
+    // 2026 National Holidays
+    { name: 'Republic Day', date: '2026-01-26', type: 'NATIONAL' },
+    { name: 'Holi', date: '2026-03-03', type: 'NATIONAL' },
+    { name: 'Ram Navami', date: '2026-03-29', type: 'NATIONAL' },
+    { name: 'Good Friday', date: '2026-04-03', type: 'NATIONAL' },
+    { name: 'Ambedkar Jayanti', date: '2026-04-14', type: 'NATIONAL' },
+    { name: 'Labour Day', date: '2026-05-01', type: 'NATIONAL' },
+    { name: 'Buddha Purnima', date: '2026-05-13', type: 'NATIONAL' },
+    { name: 'Id-ul-Fitr (Eid)', date: '2026-03-31', type: 'NATIONAL' },
+    { name: 'Id-ul-Adha (Bakr Eid)', date: '2026-06-07', type: 'NATIONAL' },
+    { name: 'Independence Day', date: '2026-08-15', type: 'NATIONAL' },
+    { name: 'Janmashtami', date: '2026-08-22', type: 'NATIONAL' },
+    { name: 'Gandhi Jayanti', date: '2026-10-02', type: 'NATIONAL' },
+    { name: 'Dussehra', date: '2026-10-10', type: 'NATIONAL' },
+    { name: 'Diwali', date: '2026-10-29', type: 'NATIONAL' },
+    { name: 'Govardhan Puja', date: '2026-10-30', type: 'NATIONAL' },
+    { name: 'Guru Nanak Jayanti', date: '2026-11-11', type: 'NATIONAL' },
+    { name: 'Christmas Day', date: '2026-12-25', type: 'NATIONAL' },
+    // State Holidays (Delhi/Haryana — applicable to most sites)
+    { name: 'Delhi Foundation Day', date: '2026-02-14', type: 'STATE', isOptional: true },
+    { name: 'Haryana Day', date: '2026-11-01', type: 'STATE' },
+    // Upcoming Holidays (already passed in 2026 but included for record)
+    { name: 'New Year\'s Day', date: '2026-01-01', type: 'NATIONAL' },
+    { name: 'Makar Sankranti', date: '2026-01-14', type: 'STATE', isOptional: true },
+    { name: 'Maha Shivratri', date: '2026-02-20', type: 'NATIONAL' },
+  ];
+  for (const h of holidayData) {
+    const existing = await prisma.holiday.findFirst({ where: { tenantId: T, name: h.name, date: new Date(h.date) } });
+    if (!existing) {
+      await prisma.holiday.create({
+        data: { tenantId: T, name: h.name, date: new Date(h.date), type: h.type, isOptional: (h as any).isOptional ?? false, applicableTo: [] },
+      });
+    }
+  }
+
+  // ── 33. Organization — Zones, Regions, Branches, Announcements, Awards ──────
+  console.log('Creating organization structure...');
+  // Zones
+  const zoneNorth = await prisma.zone.upsert({
+    where: { tenantId_name: { tenantId: T, name: 'North Zone' } },
+    update: {},
+    create: { tenantId: T, name: 'North Zone', code: 'NZ', createdBy: superAdmin.id },
+  });
+  const zoneSouth = await prisma.zone.upsert({
+    where: { tenantId_name: { tenantId: T, name: 'South Zone' } },
+    update: {},
+    create: { tenantId: T, name: 'South Zone', code: 'SZ', createdBy: superAdmin.id },
+  });
+
+  // Regions
+  const regionDelhi = await prisma.region.upsert({
+    where: { tenantId_name: { tenantId: T, name: 'Delhi NCR' } },
+    update: {},
+    create: { tenantId: T, zoneId: zoneNorth.id, name: 'Delhi NCR', code: 'DL', createdBy: superAdmin.id },
+  });
+  const regionHaryana = await prisma.region.upsert({
+    where: { tenantId_name: { tenantId: T, name: 'Haryana' } },
+    update: {},
+    create: { tenantId: T, zoneId: zoneNorth.id, name: 'Haryana', code: 'HR', createdBy: superAdmin.id },
+  });
+  await prisma.region.upsert({
+    where: { tenantId_name: { tenantId: T, name: 'UP East' } },
+    update: {},
+    create: { tenantId: T, zoneId: zoneSouth.id, name: 'UP East', code: 'UPE', createdBy: superAdmin.id },
+  });
+
+  // Branches
+  const branchesData = [
+    { code: 'HO-001', name: 'Head Office — New Delhi', regionId: regionDelhi.id, gstin: '07AABCW1234E1Z1', pan: 'AABCW1234E', phone: '011-41234567', email: 'ho@workzen.in', address: { line1: 'B-47, Okhla Industrial Area', city: 'New Delhi', state: 'Delhi', pincode: '110020' } },
+    { code: 'BR-GGN', name: 'Gurugram Branch', regionId: regionHaryana.id, gstin: '06AABCW1234E1Z2', pan: 'AABCW1234E', phone: '0124-4123456', email: 'gurugram@workzen.in', address: { line1: 'SCO 12, Sector 14, Gurugram', city: 'Gurugram', state: 'Haryana', pincode: '122001' } },
+    { code: 'BR-FBD', name: 'Faridabad Branch', regionId: regionHaryana.id, phone: '0129-4234567', email: 'faridabad@workzen.in', address: { line1: 'Plot 8, Sector 31, Faridabad', city: 'Faridabad', state: 'Haryana', pincode: '121003' } },
+  ];
+  for (const b of branchesData) {
+    const existing = await prisma.branch.findFirst({ where: { tenantId: T, code: b.code } });
+    if (!existing) {
+      await prisma.branch.create({ data: { tenantId: T, ...b, createdBy: superAdmin.id } });
+    }
+  }
+
+  // Announcements
+  const announcementsData = [
+    {
+      title: 'Independence Day Celebration — 15 August 2026',
+      body: 'All employees are invited to the Independence Day flag hoisting ceremony at Head Office on August 15, 2026 at 8:30 AM. Attendance is mandatory for office staff. Site staff should coordinate with their supervisors for on-site observance.',
+      type: 'COMPANY_NEWS' as const,
+      targetAudience: ['ALL'],
+      isPublished: true,
+      publishAt: new Date('2026-08-10T09:00:00'),
+    },
+    {
+      title: 'Revised PF & ESI Compliance Deadline — July 2026',
+      body: 'Please note that the EPFO has revised the PF challan submission deadline for July 2026 to August 20, 2026. All site supervisors must ensure attendance data is submitted to payroll by August 5. Contact payroll@workzen.in for queries.',
+      type: 'HR_CIRCULAR' as const,
+      targetAudience: ['HR', 'FINANCE', 'OPERATIONS'],
+      isPublished: true,
+      publishAt: new Date('2026-07-22T10:00:00'),
+    },
+    {
+      title: 'New Leave Application Policy — Effective 1 July 2026',
+      body: 'Effective July 1, 2026, all leave applications must be submitted at least 3 working days in advance via the WorkZen portal. Emergency leaves can still be applied on the day. The revised Leave Policy document has been uploaded to the Documents module.',
+      type: 'POLICY_UPDATE' as const,
+      targetAudience: ['ALL'],
+      isPublished: true,
+      publishAt: new Date('2026-06-20T09:00:00'),
+    },
+    {
+      title: 'DMRC Contract Renewed for 2 Additional Years',
+      body: 'We are pleased to announce that the DMRC Metro Station Housekeeping Contract (TND-2024-002) has been successfully renewed for 2 additional years effective August 1, 2026. This contract covers 10 metro stations on the Blue Line and employs 30 of our workforce. Congratulations to the Operations team!',
+      type: 'COMPANY_NEWS' as const,
+      targetAudience: ['ALL'],
+      isPublished: true,
+      publishAt: new Date('2026-06-15T11:00:00'),
+    },
+    {
+      title: 'Mandatory Fire Safety Training — All Site Staff',
+      body: 'As per NFPA compliance requirement for AAI T3 contract, all site staff at IGI Terminal 3 must complete the fire safety refresher training by August 31, 2026. Training sessions will be conducted on August 16, 22, and 28. Register via the Training module.',
+      type: 'NOTICE_BOARD' as const,
+      targetAudience: ['OPERATIONS', 'HR'],
+      isPublished: true,
+      publishAt: new Date('2026-08-01T09:00:00'),
+    },
+  ];
+  for (const ann of announcementsData) {
+    const existing = await prisma.announcement.findFirst({ where: { tenantId: T, title: ann.title } });
+    if (!existing) {
+      await prisma.announcement.create({
+        data: { tenantId: T, ...ann, createdBy: superAdmin.id },
+      });
+    }
+  }
+
+  // Employee Awards
+  const awardsData = [
+    { empCode: 'EMP-001', awardType: 'EMPLOYEE_OF_MONTH' as const, title: 'Employee of the Month — May 2026', month: 5, year: 2026, description: 'Rajesh Kumar maintained 100% attendance and received exceptional feedback from NHAI site manager for vigilance and discipline.' },
+    { empCode: 'EMP-009', awardType: 'BEST_PERFORMER' as const, title: 'Best Shift Incharge Q1 2026', month: 3, year: 2026, description: 'Ramesh Gupta achieved zero incident rate across all shifts at NHAI NH-48 during Q1 2026.' },
+    { empCode: 'EMP-019', awardType: 'LONG_SERVICE' as const, title: '5 Year Long Service Award', month: 2, year: 2026, description: 'Kiran Bala completes 5 exceptional years with WorkZen, serving as Site Incharge at AAI T3.' },
+    { empCode: 'EMP-005', awardType: 'BEST_ATTENDANCE' as const, title: 'Best Attendance 2025', month: 12, year: 2025, description: 'Deepak Sharma achieved perfect attendance throughout 2025 with zero late arrivals.' },
+    { empCode: 'EMP-012', awardType: 'BEST_PERFORMER' as const, title: 'HR Excellence Award 2025', month: 12, year: 2025, description: 'Poonam Verma successfully onboarded 45 new site employees and reduced attrition by 20% in FY 2025-26.' },
+  ];
+  for (const aw of awardsData) {
+    const empId = employees[aw.empCode];
+    if (!empId) continue;
+    const existing = await prisma.employeeAward.findFirst({ where: { tenantId: T, employeeId: empId, awardType: aw.awardType, year: aw.year, month: aw.month } });
+    if (!existing) {
+      await prisma.employeeAward.create({
+        data: { tenantId: T, employeeId: empId, awardType: aw.awardType, title: aw.title, month: aw.month, year: aw.year, description: aw.description, givenBy: superAdmin.id },
+      });
+    }
+  }
+
+  // ── 34. Performance — Cycles, Reviews, Goals ─────────────────────────────────
+  console.log('Creating performance data...');
+
+  // Review Cycles
+  const cycleAnnual2025 = await prisma.performanceReviewCycle.findFirst({ where: { tenantId: T, name: 'Annual Review FY 2025-26' } }) ??
+    await prisma.performanceReviewCycle.create({ data: { tenantId: T, name: 'Annual Review FY 2025-26', cycleType: 'ANNUAL', startDate: d('2025-04-01'), endDate: d('2026-03-31'), status: 'COMPLETED', description: 'Annual performance appraisal for all permanent staff', createdBy: superAdmin.id } });
+
+  const cycleQ1_2026 = await prisma.performanceReviewCycle.findFirst({ where: { tenantId: T, name: 'Q1 Review 2026-27' } }) ??
+    await prisma.performanceReviewCycle.create({ data: { tenantId: T, name: 'Q1 Review 2026-27', cycleType: 'QUARTERLY', startDate: d('2026-04-01'), endDate: d('2026-06-30'), status: 'ACTIVE', description: 'Q1 FY 2026-27 quarterly performance review', createdBy: superAdmin.id } });
+
+  // Performance Reviews (for PERMANENT employees only)
+  const reviewData = [
+    { empCode: 'EMP-005', selfRating: 4, managerRating: 4, hrRating: 4, finalRating: 4, selfComments: 'Managed all technical operations smoothly without any downtime incidents.', managerComments: 'Reliable and technically competent. Completes tasks ahead of schedule.', status: 'COMPLETED', cycleId: cycleAnnual2025.id },
+    { empCode: 'EMP-009', selfRating: 5, managerRating: 5, hrRating: 4, finalRating: 5, selfComments: 'Maintained zero security incident rate. Trained 10 new guards.', managerComments: 'Outstanding leadership. Promoted to Shift Incharge based on performance.', status: 'COMPLETED', cycleId: cycleAnnual2025.id },
+    { empCode: 'EMP-012', selfRating: 4, managerRating: 4, hrRating: 5, finalRating: 4, selfComments: 'Successfully completed recruitment for 3 new contracts. Processed all payroll on time.', managerComments: 'Excellent HR operations. Very responsive to employee needs.', status: 'COMPLETED', cycleId: cycleAnnual2025.id },
+    { empCode: 'EMP-015', selfRating: 3, managerRating: 4, hrRating: 3, finalRating: 3, selfComments: 'Handled all technical maintenance tasks. Could improve documentation.', managerComments: 'Good technical skills. Needs to improve reporting and documentation.', status: 'COMPLETED', cycleId: cycleAnnual2025.id },
+    { empCode: 'EMP-019', selfRating: 5, managerRating: 5, hrRating: 5, finalRating: 5, selfComments: 'Managed entire AAI T3 site operations. Zero complaints received from client.', managerComments: 'Exceptional site management. Client extremely satisfied with performance.', status: 'COMPLETED', cycleId: cycleAnnual2025.id },
+    // Q1 2026 - in progress
+    { empCode: 'EMP-005', selfRating: null, managerRating: null, hrRating: null, finalRating: null, selfComments: null, managerComments: null, status: 'PENDING_SELF', cycleId: cycleQ1_2026.id },
+    { empCode: 'EMP-009', selfRating: 4, managerRating: null, hrRating: null, finalRating: null, selfComments: 'Q1 was productive. Completed fire safety training.', managerComments: null, status: 'PENDING_MANAGER', cycleId: cycleQ1_2026.id },
+  ];
+  for (const rv of reviewData) {
+    const empId = employees[rv.empCode];
+    if (!empId) continue;
+    const existing = await prisma.performanceReview.findFirst({ where: { tenantId: T, employeeId: empId, cycleId: rv.cycleId } });
+    if (!existing) {
+      await prisma.performanceReview.create({
+        data: {
+          tenantId: T, employeeId: empId, cycleId: rv.cycleId,
+          reviewPeriodStart: rv.cycleId === cycleAnnual2025.id ? d('2025-04-01') : d('2026-04-01'),
+          reviewPeriodEnd: rv.cycleId === cycleAnnual2025.id ? d('2026-03-31') : d('2026-06-30'),
+          selfRating: rv.selfRating, managerRating: rv.managerRating, hrRating: rv.hrRating, finalRating: rv.finalRating,
+          selfComments: rv.selfComments, managerComments: rv.managerComments,
+          attendanceScore: rv.finalRating ? rv.finalRating * 18 : null,
+          productivityScore: rv.finalRating ? rv.finalRating * 20 : null,
+          status: rv.status,
+          completedAt: rv.status === 'COMPLETED' ? d('2026-04-15') : null,
+          createdBy: superAdmin.id,
+        },
+      });
+    }
+  }
+
+  // Employee Goals
+  const goalData = [
+    { empCode: 'EMP-001', title: 'Achieve 98% Attendance Rate', goalType: 'ATTENDANCE', description: 'Maintain attendance above 98% for FY 2026-27', targetValue: 98, actualValue: 100, unit: '%', dueDate: '2027-03-31', status: 'IN_PROGRESS', progress: 65 },
+    { empCode: 'EMP-005', title: 'Complete Electrical Safety Certification', goalType: 'TRAINING', description: 'Obtain IS:5961 electrical safety certification by Q2 2026', targetValue: 1, actualValue: 0, unit: 'cert', dueDate: '2026-09-30', status: 'ACTIVE', progress: 40 },
+    { empCode: 'EMP-009', title: 'Zero Security Incidents at NHAI Sites', goalType: 'SAFETY', description: 'Maintain zero reportable security incidents across all assigned NHAI toll plazas', targetValue: 0, actualValue: 0, unit: 'incidents', dueDate: '2027-03-31', status: 'IN_PROGRESS', progress: 75 },
+    { empCode: 'EMP-012', title: 'Reduce Attrition to Below 15%', goalType: 'PERFORMANCE', description: 'Implement retention initiatives to bring site employee attrition below 15% for FY 2026-27', targetValue: 15, actualValue: 18, unit: '%', dueDate: '2027-03-31', status: 'ACTIVE', progress: 50 },
+    { empCode: 'EMP-019', title: 'Client Satisfaction Score 4.5+', goalType: 'QUALITY', description: 'Achieve AAI quarterly satisfaction score of 4.5/5 or above for all four quarters', targetValue: 4.5, actualValue: 4.7, unit: '/5', dueDate: '2027-03-31', status: 'IN_PROGRESS', progress: 80 },
+    { empCode: 'EMP-015', title: 'Document All Maintenance Procedures', goalType: 'COMPLIANCE', description: 'Create SOP documentation for all 12 routine maintenance tasks at AAI T3 by Aug 2026', targetValue: 12, actualValue: 8, unit: 'SOPs', dueDate: '2026-08-31', status: 'ACTIVE', progress: 67 },
+  ];
+  for (const g of goalData) {
+    const empId = employees[g.empCode];
+    if (!empId) continue;
+    const existing = await prisma.employeeGoal.findFirst({ where: { tenantId: T, employeeId: empId, title: g.title } });
+    if (!existing) {
+      await prisma.employeeGoal.create({
+        data: {
+          tenantId: T, employeeId: empId, title: g.title, goalType: g.goalType, description: g.description,
+          targetValue: g.targetValue, actualValue: g.actualValue, unit: g.unit,
+          dueDate: d(g.dueDate), status: g.status, progress: g.progress, createdBy: superAdmin.id,
+        },
+      });
+    }
+  }
+
+  // ── 35. Training — Programs, Sessions, Employee Enrollments ──────────────────
+  console.log('Creating training data...');
+  const trainingPrograms = [
+    { name: 'Induction & Orientation', code: 'TRG-IND', programType: 'INDUCTION', description: 'Mandatory 2-day induction for all new joiners covering company policies, safety protocols, and job responsibilities', durationHours: 16, isMandatory: true, passScore: 70 },
+    { name: 'Fire Safety & Emergency Response', code: 'TRG-FIRE', programType: 'SAFETY', description: 'Annual fire safety refresher training covering evacuation procedures, fire extinguisher use, and emergency contacts', durationHours: 8, isMandatory: true, passScore: 75 },
+    { name: 'Security Guard Refresher', code: 'TRG-SEC', programType: 'SKILL', description: 'Quarterly refresher for security staff on access control, threat identification, and communication protocols', durationHours: 4, isMandatory: true, passScore: 65 },
+    { name: 'First Aid & Basic Life Support', code: 'TRG-AID', programType: 'SAFETY', description: 'Certified first aid and BLS training for all site supervisors and incharges', durationHours: 8, isMandatory: false, passScore: 80 },
+    { name: 'Housekeeping Quality Standards', code: 'TRG-HSK', programType: 'SKILL', description: 'DMRC-mandated training on ISO 9001 housekeeping quality standards for all housekeeping staff', durationHours: 6, isMandatory: false, passScore: 60 },
+  ];
+  const trgProgIds: Record<string, string> = {};
+  for (const tp of trainingPrograms) {
+    const existing = await prisma.trainingProgram.findFirst({ where: { tenantId: T, code: tp.code } });
+    if (!existing) {
+      const prog = await prisma.trainingProgram.create({ data: { tenantId: T, ...tp, isActive: true, createdBy: superAdmin.id } });
+      trgProgIds[tp.code] = prog.id;
+    } else {
+      trgProgIds[tp.code] = existing.id;
+    }
+  }
+
+  // Training Sessions
+  const trainingSessionsData = [
+    { programCode: 'TRG-IND', title: 'Induction Batch — June 2026', scheduledDate: '2026-06-02', trainerName: 'Poonam Verma', location: 'Head Office — New Delhi', maxParticipants: 20, status: 'COMPLETED' },
+    { programCode: 'TRG-FIRE', title: 'Fire Safety Refresher — NHAI Site', scheduledDate: '2026-05-15', trainerName: 'Safe Skies Training (External)', location: 'NHAI NH-48 Toll Plaza Gurugram', maxParticipants: 15, status: 'COMPLETED' },
+    { programCode: 'TRG-FIRE', title: 'Fire Safety Refresher — AAI T3', scheduledDate: '2026-08-16', trainerName: 'AAI In-house Safety Team', location: 'IGI Airport Terminal 3', maxParticipants: 30, status: 'SCHEDULED' },
+    { programCode: 'TRG-SEC', title: 'Security Refresher Q2 2026', scheduledDate: '2026-06-20', trainerName: 'Ramesh Gupta (EMP-009)', location: 'Head Office — New Delhi', maxParticipants: 25, status: 'COMPLETED' },
+    { programCode: 'TRG-AID', title: 'First Aid Certification — Site Incharges', scheduledDate: '2026-07-10', trainerName: 'Red Cross India', location: 'Head Office — New Delhi', maxParticipants: 10, status: 'SCHEDULED' },
+    { programCode: 'TRG-HSK', title: 'DMRC Quality Standards Training', scheduledDate: '2026-04-10', trainerName: 'DMRC Quality Cell', location: 'DMRC Central Secretariat Station', maxParticipants: 30, status: 'COMPLETED' },
+  ];
+  const trgSessionIds: Record<string, string> = {};
+  for (const ts of trainingSessionsData) {
+    const progId = trgProgIds[ts.programCode];
+    if (!progId) continue;
+    const existing = await prisma.trainingSession.findFirst({ where: { tenantId: T, programId: progId, title: ts.title } });
+    if (!existing) {
+      const sess = await prisma.trainingSession.create({
+        data: {
+          tenantId: T, programId: progId, title: ts.title, sessionType: 'CLASSROOM',
+          trainerName: ts.trainerName, scheduledDate: d(ts.scheduledDate),
+          venue: ts.location, maxCapacity: ts.maxParticipants, status: ts.status,
+          createdBy: superAdmin.id,
+        },
+      });
+      trgSessionIds[ts.title] = sess.id;
+    } else {
+      trgSessionIds[ts.title] = existing.id;
+    }
+  }
+
+  // Employee Training Enrollments
+  const empTrainingData = [
+    { empCode: 'EMP-001', sessionTitle: 'Fire Safety Refresher — NHAI Site', status: 'PASSED', score: 88, completedDate: '2026-05-15' },
+    { empCode: 'EMP-003', sessionTitle: 'Fire Safety Refresher — NHAI Site', status: 'PASSED', score: 78, completedDate: '2026-05-15' },
+    { empCode: 'EMP-007', sessionTitle: 'Fire Safety Refresher — NHAI Site', status: 'PASSED', score: 82, completedDate: '2026-05-15' },
+    { empCode: 'EMP-009', sessionTitle: 'Security Refresher Q2 2026', status: 'PASSED', score: 95, completedDate: '2026-06-20' },
+    { empCode: 'EMP-011', sessionTitle: 'Security Refresher Q2 2026', status: 'PASSED', score: 87, completedDate: '2026-06-20' },
+    { empCode: 'EMP-002', sessionTitle: 'DMRC Quality Standards Training', status: 'PASSED', score: 74, completedDate: '2026-04-10' },
+    { empCode: 'EMP-004', sessionTitle: 'DMRC Quality Standards Training', status: 'PASSED', score: 68, completedDate: '2026-04-10' },
+    { empCode: 'EMP-006', sessionTitle: 'DMRC Quality Standards Training', status: 'PASSED', score: 71, completedDate: '2026-04-10' },
+    { empCode: 'EMP-008', sessionTitle: 'DMRC Quality Standards Training', status: 'PASSED', score: 65, completedDate: '2026-04-10' },
+    { empCode: 'EMP-012', sessionTitle: 'Induction Batch — June 2026', status: 'PASSED', score: 92, completedDate: '2026-06-03' },
+  ];
+  for (const et of empTrainingData) {
+    const empId = employees[et.empCode];
+    const sessId = trgSessionIds[et.sessionTitle];
+    // Find the programId from the session
+    const sess = await prisma.trainingSession.findUnique({ where: { id: sessId } });
+    if (!empId || !sessId || !sess) continue;
+    const existing = await prisma.employeeTraining.findFirst({ where: { tenantId: T, employeeId: empId, sessionId: sessId } });
+    if (!existing) {
+      await prisma.employeeTraining.create({
+        data: {
+          tenantId: T, employeeId: empId, sessionId: sessId, programId: sess.programId,
+          status: et.status, score: et.score, completedAt: d(et.completedDate), passed: et.score >= 60,
+        },
+      });
+    }
+  }
+
+  // ── 36. Notifications ────────────────────────────────────────────────────────
+  console.log('Creating notifications...');
+  const notifData = [
+    { userId: superAdmin.id, type: 'IN_APP' as const, subject: 'Payroll Run Approved', body: 'June 2026 payroll run has been approved. Disbursement scheduled for July 5, 2026.', recipient: 'admin@workzen.in', status: 'READ' as const, readAt: new Date('2026-06-24T10:00:00') },
+    { userId: hrUser.id, type: 'IN_APP' as const, subject: 'Leave Request Pending Approval', body: 'Rajesh Kumar (EMP-001) has applied for 2 days casual leave from July 14-15, 2026. Please review and approve.', recipient: 'hr@workzen.in', status: 'DELIVERED' as const },
+    { userId: financeUser.id, type: 'IN_APP' as const, subject: 'Invoice Overdue — NDMC', body: 'Invoice INV-2026-004 for ₹3,04,000 is 15 days overdue from NDMC. Please follow up with the client.', recipient: 'finance@workzen.in', status: 'READ' as const, readAt: new Date('2026-06-20T09:00:00') },
+    { userId: superAdmin.id, type: 'IN_APP' as const, subject: 'Compliance Deadline — PF Challan', body: 'PF challan for June 2026 is due on July 15, 2026. Please ensure payroll is processed before the deadline.', recipient: 'admin@workzen.in', status: 'DELIVERED' as const },
+    { userId: hrUser.id, type: 'IN_APP' as const, subject: 'New Candidate Interview Scheduled', body: 'Interview scheduled for Suresh Nair (Security Guard position) on July 2, 2026 at 10:00 AM.', recipient: 'hr@workzen.in', status: 'DELIVERED' as const },
+    { userId: financeUser.id, type: 'IN_APP' as const, subject: 'Payment Received — DMRC', body: 'Payment of ₹10,32,500 received from DMRC against Invoice INV-2026-002. Transaction ref: RTGS2026INV002.', recipient: 'finance@workzen.in', status: 'READ' as const, readAt: new Date('2026-06-18T14:00:00') },
+    { userId: superAdmin.id, type: 'IN_APP' as const, subject: 'AAI Contract Renewal — Action Required', body: 'AAI T3 Integrated Facility Management contract (TND-2024-003) is up for renewal in October 2027. Please begin documentation process 6 months prior.', recipient: 'admin@workzen.in', status: 'DELIVERED' as const },
+    { userId: payrollUser.id, type: 'IN_APP' as const, subject: 'Payroll Run Initiated', body: 'June 2026 payroll run has been initiated with 65 employees. Please review and approve by July 1, 2026.', recipient: 'payroll@workzen.in', status: 'READ' as const, readAt: new Date('2026-06-25T11:00:00') },
+  ];
+  const existingNotifCount = await prisma.notification.count({ where: { tenantId: T } });
+  if (existingNotifCount === 0) {
+    for (const n of notifData) {
+      await prisma.notification.create({
+        data: { tenantId: T, ...n, sentAt: new Date() },
+      });
+    }
+  }
+
+  // ── 37. Rate Masters ─────────────────────────────────────────────────────────
+  console.log('Creating rate masters...');
+  const rateMasterData = [
+    { designationCode: 'SG', rateType: 'BASIC' as const, amount: 15000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Security Guards per contract norms' },
+    { designationCode: 'HG', rateType: 'BASIC' as const, amount: 18000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Head Guards' },
+    { designationCode: 'SI', rateType: 'BASIC' as const, amount: 22000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Shift Incharge' },
+    { designationCode: 'HKS', rateType: 'BASIC' as const, amount: 14000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Housekeeping Staff' },
+    { designationCode: 'HKP', rateType: 'BASIC' as const, amount: 16000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Housekeeping Supervisor' },
+    { designationCode: 'TO', rateType: 'BASIC' as const, amount: 20000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Technical Operator' },
+    { designationCode: 'SIC', rateType: 'BASIC' as const, amount: 28000, effectiveFrom: '2024-04-01', notes: 'Standard rate for Site Incharge' },
+    // OT Rates (1.5x)
+    { designationCode: 'SG', rateType: 'OT' as const, amount: 100, effectiveFrom: '2024-04-01', notes: 'Overtime rate per hour for Security Guards' },
+    { designationCode: 'HG', rateType: 'OT' as const, amount: 120, effectiveFrom: '2024-04-01', notes: 'Overtime rate per hour for Head Guards' },
+    // Holiday Rates (2x)
+    { designationCode: 'SG', rateType: 'HOLIDAY' as const, amount: 1000, effectiveFrom: '2024-04-01', notes: 'Holiday duty allowance per day for Security Guards' },
+    { designationCode: 'HKS', rateType: 'HOLIDAY' as const, amount: 933, effectiveFrom: '2024-04-01', notes: 'Holiday duty allowance per day for Housekeeping Staff' },
+    // Night Shift Allowance
+    { designationCode: 'SG', rateType: 'NIGHT_SHIFT' as const, amount: 500, effectiveFrom: '2024-04-01', notes: 'Night shift allowance per shift (10PM-6AM)' },
+    { designationCode: 'HG', rateType: 'NIGHT_SHIFT' as const, amount: 600, effectiveFrom: '2024-04-01', notes: 'Night shift allowance per shift for Head Guard' },
+  ];
+  for (const rm of rateMasterData) {
+    const dsgId = designations[rm.designationCode];
+    if (!dsgId) continue;
+    const existing = await prisma.rateMaster.findFirst({ where: { tenantId: T, designationId: dsgId, rateType: rm.rateType } });
+    if (!existing) {
+      await prisma.rateMaster.create({
+        data: { tenantId: T, designationId: dsgId, rateType: rm.rateType, amount: rm.amount, effectiveFrom: d(rm.effectiveFrom), notes: rm.notes, isActive: true, createdBy: superAdmin.id },
+      });
+    }
+  }
+
   console.log('\n✅ Seeding complete!');
   console.log('─────────────────────────────────────────────');
   console.log('Demo credentials:');

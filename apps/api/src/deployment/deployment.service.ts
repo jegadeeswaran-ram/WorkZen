@@ -14,9 +14,9 @@ export class DeploymentService {
         where,
         include: {
           employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true, designation: { select: { name: true } } } },
-          tender: { select: { tenderName: true } },
-          site: { select: { name: true } },
-          shift: { select: { name: true } },
+          tender: { select: { id: true, tenderName: true } },
+          site: { select: { id: true, name: true } },
+          shift: { select: { id: true, name: true } },
         },
         orderBy: { startDate: 'desc' },
         ...paginate(page, limit),
@@ -28,6 +28,32 @@ export class DeploymentService {
 
   async createDeployment(tenantId: string, dto: Record<string, unknown>, userId: string) {
     return this.prisma.deployment.create({ data: { ...dto, tenantId, createdBy: userId } as any });
+  }
+
+  async getDeployment(tenantId: string, id: string) {
+    const dep = await this.prisma.deployment.findFirst({
+      where: { id, tenantId },
+      include: {
+        employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true, designation: { select: { name: true } }, photo: true } },
+        tender: { select: { id: true, tenderName: true } },
+        site: { select: { id: true, name: true } },
+        shift: { select: { id: true, name: true, startTime: true, endTime: true } },
+      },
+    });
+    if (!dep) throw new NotFoundException('Deployment not found');
+    return dep;
+  }
+
+  async updateDeployment(tenantId: string, id: string, dto: Record<string, unknown>) {
+    const dep = await this.prisma.deployment.findFirst({ where: { id, tenantId } });
+    if (!dep) throw new NotFoundException('Deployment not found');
+    return this.prisma.deployment.update({ where: { id }, data: dto as any });
+  }
+
+  async deleteDeployment(tenantId: string, id: string) {
+    const dep = await this.prisma.deployment.findFirst({ where: { id, tenantId } });
+    if (!dep) throw new NotFoundException('Deployment not found');
+    return this.prisma.deployment.delete({ where: { id } });
   }
 
   async endDeployment(tenantId: string, id: string, endDate: string) {

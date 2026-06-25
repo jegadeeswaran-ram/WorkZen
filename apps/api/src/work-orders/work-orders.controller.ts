@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Body, Param, Query, UseGuards,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { WorkOrdersService } from './work-orders.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -37,6 +37,11 @@ export class WorkOrdersController {
   @Patch(':id') @RequirePermissions('work_order:write')
   update(@TenantId() tenantId: string, @Param('id') id: string, @CurrentUser('id') userId: string, @Body() dto: any) {
     return this.service.update(tenantId, id, userId, dto);
+  }
+
+  @Delete(':id') @RequirePermissions('work_order:write')
+  remove(@TenantId() tenantId: string, @Param('id') id: string) {
+    return this.service.remove(tenantId, id);
   }
 
   // ── Positions ──────────────────────────────────────────────────
@@ -112,6 +117,12 @@ export class WorkOrdersController {
   @Patch('invoices/:invId/status') @RequirePermissions('work_order:write')
   updateInvoiceStatus(@TenantId() tenantId: string, @Param('invId') invId: string, @Body() body: any) {
     return this.service.updateInvoiceStatus(tenantId, invId, body.status);
+  }
+
+  // ── Email ──────────────────────────────────────────────────────
+  @Post(':id/send-email') @RequirePermissions('work_order:read')
+  sendEmail(@TenantId() tenantId: string, @Param('id') id: string, @Body() body: any) {
+    return this.service.sendEmail(tenantId, id, body.email, body.type);
   }
 
   // ── Payments ────────────────────────────────────────────────────

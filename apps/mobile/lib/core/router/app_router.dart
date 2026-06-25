@@ -148,6 +148,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(path: '/sa/issues', builder: (_, __) => const SaIssuesScreen()),
           GoRoute(path: '/sa/complaints', builder: (_, __) => const SaComplaintsScreen()),
           GoRoute(path: '/sa/more', builder: (_, __) => const SaMoreScreen()),
+          GoRoute(
+            path: '/sa/work-orders',
+            builder: (_, __) => const WorkOrdersScreen(basePath: '/sa/work-orders'),
+          ),
+          GoRoute(
+            path: '/sa/work-orders/:id',
+            builder: (_, state) => WorkOrderDetailScreen(workOrderId: state.pathParameters['id']!),
+          ),
         ],
       ),
 

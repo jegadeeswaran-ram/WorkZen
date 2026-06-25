@@ -61,7 +61,7 @@ export const tendersApi = {
 
 export const employeesApi = {
   list: (params?: Record<string, unknown>) => api.get('/employees', { params }).then((r) => r.data),
-  selectAll: (status = 'ACTIVE') => api.get('/employees', { params: { limit: 1000, status } }).then((r): any[] => r.data?.data ?? r.data ?? []),
+  selectAll: () => api.get('/employees', { params: { limit: 1000 } }).then((r): any[] => r.data?.data ?? r.data ?? []),
   get: (id: string) => api.get(`/employees/${id}`).then((r) => r.data.data),
   create: (data: Record<string, unknown>) => api.post('/employees', data).then((r) => r.data.data),
   update: (id: string, data: Record<string, unknown>) => api.patch(`/employees/${id}`, data).then((r) => r.data.data),
@@ -186,7 +186,10 @@ export const clientsApi = {
 export const deploymentApi = {
   // Deployments
   list: (params?: Record<string, unknown>) => api.get('/deployment', { params }).then(r => r.data),
+  get: (id: string) => api.get(`/deployment/${id}`).then(r => r.data.data),
   create: (data: Record<string, unknown>) => api.post('/deployment', data).then(r => r.data.data),
+  update: (id: string, data: Record<string, unknown>) => api.patch(`/deployment/${id}`, data).then(r => r.data.data),
+  remove: (id: string) => api.delete(`/deployment/${id}`).then(r => r.data),
   end: (id: string, endDate: string) => api.patch(`/deployment/${id}/end`, { endDate }).then(r => r.data.data),
   strength: (tenderId: string) => api.get(`/deployment/strength/${tenderId}`).then(r => r.data.data),
   // Sites
@@ -558,11 +561,16 @@ export const costCenterApi = {
 // ── Work Orders ──────────────────────────────────────────────────────────────
 export const workOrdersApi = {
   dashboard: () => api.get('/work-orders/dashboard').then((r) => r.data.data ?? r.data),
-  list: (params?: Record<string, unknown>) => api.get('/work-orders', { params }).then((r) => r.data),
+  list: (params?: Record<string, unknown>) => api.get('/work-orders', { params }).then((r) => {
+    const d = r.data?.data ?? r.data;
+    if (Array.isArray(d)) return { data: d, meta: null };
+    return d;
+  }),
   selectAll: () => api.get('/work-orders', { params: { limit: 1000 } }).then((r): any[] => r.data?.data ?? r.data ?? []),
   get: (id: string) => api.get(`/work-orders/${id}`).then((r) => r.data.data),
   create: (data: Record<string, unknown>) => api.post('/work-orders', data).then((r) => r.data.data),
   update: (id: string, data: Record<string, unknown>) => api.patch(`/work-orders/${id}`, data).then((r) => r.data.data),
+  remove: (id: string) => api.delete(`/work-orders/${id}`).then((r) => r.data),
   // Positions
   positions: (woId: string) => api.get(`/work-orders/${woId}/positions`).then((r) => r.data.data ?? r.data),
   createPosition: (woId: string, data: Record<string, unknown>) => api.post(`/work-orders/${woId}/positions`, data).then((r) => r.data.data),
@@ -584,6 +592,9 @@ export const workOrdersApi = {
   // Payments
   payments: (woId: string) => api.get(`/work-orders/${woId}/payments`).then((r) => r.data.data ?? r.data),
   recordPayment: (woId: string, data: Record<string, unknown>) => api.post(`/work-orders/${woId}/payments`, data).then((r) => r.data.data),
+  // Email
+  sendEmail: (id: string, email: string, type: 'work-order' | 'invoice') =>
+    api.post(`/work-orders/${id}/send-email`, { email, type }).then((r) => r.data),
 };
 
 // ── Logistics ────────────────────────────────────────────────────────────────

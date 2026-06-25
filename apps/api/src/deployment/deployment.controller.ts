@@ -66,6 +66,15 @@ export class DeploymentController {
   @Post() @RequirePermissions('deployment:write')
   create(@TenantId() t: string, @Body() dto: any, @CurrentUser('id') uid: string) { return this.service.createDeployment(t, dto, uid); }
 
+  @Get(':id') @RequirePermissions('deployment:read')
+  getOne(@TenantId() t: string, @Param('id') id: string) { return this.service.getDeployment(t, id); }
+
+  @Patch(':id') @RequirePermissions('deployment:write')
+  update(@TenantId() t: string, @Param('id') id: string, @Body() dto: any) { return this.service.updateDeployment(t, id, dto); }
+
+  @Delete(':id') @RequirePermissions('deployment:write')
+  remove(@TenantId() t: string, @Param('id') id: string) { return this.service.deleteDeployment(t, id); }
+
   @Patch(':id/end') @RequirePermissions('deployment:write')
   end(@TenantId() t: string, @Param('id') id: string, @Body('endDate') endDate: string) { return this.service.endDeployment(t, id, endDate); }
 }

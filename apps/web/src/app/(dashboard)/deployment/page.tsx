@@ -8,7 +8,8 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import {
   Plus, MapPin, Users, Clock, ChevronLeft, ChevronRight,
-  X, Save, Building2, Layers, CheckCircle2, AlertCircle
+  X, Save, Building2, Layers, CheckCircle2, AlertCircle,
+  Eye, Pencil, Trash2, StopCircle, CalendarOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
@@ -65,6 +66,80 @@ const F = ({ label, error, children }: { label: string; error?: string; children
   </div>
 );
 
+// ─── View Panel ─────────────────────────────────────────────────────
+function ViewPanel({ dep, onClose, onEdit, onEnd, onDelete }: { dep: any; onClose: () => void; onEdit: () => void; onEnd: () => void; onDelete: () => void }) {
+  const statusColor = dep.status === 'ACTIVE' ? '#10b981' : dep.status === 'COMPLETED' ? '#60a5fa' : 'rgba(255,255,255,0.4)';
+  const statusBg = dep.status === 'ACTIVE' ? 'rgba(16,185,129,0.12)' : dep.status === 'COMPLETED' ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.06)';
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+      <div className="w-full max-w-lg rounded-2xl" style={{ background: 'var(--wz-card-bg)', border: '1px solid var(--wz-card-border)' }}>
+        <div className="flex items-center justify-between p-5" style={{ borderBottom: '1px solid var(--wz-card-border)' }}>
+          <h3 className="font-semibold" style={{ fontFamily: 'Plus Jakarta Sans', color: 'var(--wz-text-primary)' }}>Deployment Details</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"><X size={18} style={{ color: 'var(--wz-text-muted)' }} /></button>
+        </div>
+        <div className="p-5 space-y-4">
+          {/* Employee */}
+          <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold" style={{ background: 'rgba(99,102,241,0.2)', color: '#818cf8' }}>
+              {dep.employee?.firstName?.[0]}{dep.employee?.lastName?.[0]}
+            </div>
+            <div>
+              <p className="font-medium text-white text-sm">{dep.employee?.firstName} {dep.employee?.lastName}</p>
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{dep.employee?.designation?.name} · {dep.employee?.employeeCode}</p>
+            </div>
+            <span className="ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium" style={{ background: statusBg, color: statusColor }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor }} />{dep.status}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Site</p>
+              <p className="text-sm text-white">{dep.site?.name ?? '—'}</p>
+            </div>
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Shift</p>
+              <p className="text-sm text-white">{dep.shift ? `${dep.shift.name}${dep.shift.startTime ? ` (${dep.shift.startTime}–${dep.shift.endTime})` : ''}` : '—'}</p>
+            </div>
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Start Date</p>
+              <p className="text-sm text-white">{formatDate(dep.startDate)}</p>
+            </div>
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>End Date</p>
+              <p className="text-sm text-white">{dep.endDate ? formatDate(dep.endDate) : '—'}</p>
+            </div>
+          </div>
+          {dep.tender && (
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Tender</p>
+              <p className="text-sm text-white">{dep.tender.tenderName}</p>
+            </div>
+          )}
+          {dep.notes && (
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}>
+              <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>Notes</p>
+              <p className="text-sm text-white">{dep.notes}</p>
+            </div>
+          )}
+          <div className="flex gap-2 pt-1">
+            {dep.status === 'ACTIVE' && <>
+              <button onClick={onEnd} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: 'rgba(245,158,11,0.1)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.2)' }}>
+                <CalendarOff size={13} /> End Deployment
+              </button>
+              <button onClick={onEdit} className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
+                <Pencil size={13} /> Edit
+              </button>
+            </>}
+            <button onClick={onDelete} className="ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: 'rgba(244,63,94,0.1)', color: '#f87171', border: '1px solid rgba(244,63,94,0.2)' }}>
+              <Trash2 size={13} /> Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ──────────────────────────────────────────────────────
 export default function DeploymentPage() {
   const [tab, setTab] = useState<'deployments' | 'sites' | 'shifts'>('deployments');
@@ -72,12 +147,14 @@ export default function DeploymentPage() {
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showSiteModal, setShowSiteModal] = useState(false);
   const [showShiftModal, setShowShiftModal] = useState(false);
+  const [viewDep, setViewDep] = useState<any>(null);
+  const [editDep, setEditDep] = useState<any>(null);
   const qc = useQueryClient();
 
   // Data queries
   const { data: deplyData, isLoading: loadDeploy } = useQuery({
     queryKey: ['deployments', page],
-    queryFn: () => deploymentApi.list({ page, limit: 15, status: 'ACTIVE' }),
+    queryFn: () => deploymentApi.list({ page, limit: 15 }),
     enabled: tab === 'deployments',
   });
   const { data: sites = [], isLoading: loadSites } = useQuery({
@@ -90,26 +167,26 @@ export default function DeploymentPage() {
     queryFn: deploymentApi.shifts,
     enabled: tab === 'shifts',
   });
+  const modalOpen = showDeployModal || !!editDep;
   const { data: employees = [] } = useQuery({
     queryKey: ['employees-select-all'],
-    queryFn: () => employeesApi.selectAll('ACTIVE'),
-    enabled: showDeployModal,
+    queryFn: () => employeesApi.selectAll(),
+    enabled: modalOpen,
   });
   const { data: tendersData = [] } = useQuery({
     queryKey: ['tenders-select-all'],
     queryFn: tendersApi.selectAll,
-    enabled: showDeployModal,
+    enabled: modalOpen,
   });
-  // Load sites/shifts for the modal regardless of which tab is active
   const { data: modalSites = [] } = useQuery({
     queryKey: ['sites-all'],
     queryFn: deploymentApi.sites,
-    enabled: showDeployModal,
+    enabled: modalOpen,
   });
   const { data: modalShifts = [] } = useQuery({
     queryKey: ['shifts-all'],
     queryFn: deploymentApi.shifts,
-    enabled: showDeployModal,
+    enabled: modalOpen,
   });
 
   const deployments = (deplyData as any)?.data ?? [];
@@ -138,9 +215,33 @@ export default function DeploymentPage() {
   });
   const endMut = useMutation({
     mutationFn: ({ id }: { id: string }) => deploymentApi.end(id, new Date().toISOString()),
-    onSuccess: () => { toast.success('Deployment ended'); qc.invalidateQueries({ queryKey: ['deployments'] }); },
+    onSuccess: () => { toast.success('Deployment ended'); qc.invalidateQueries({ queryKey: ['deployments'] }); setViewDep(null); },
     onError: () => toast.error('Failed to end deployment'),
   });
+  const editMut = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => deploymentApi.update(id, data),
+    onSuccess: () => { toast.success('Deployment updated'); qc.invalidateQueries({ queryKey: ['deployments'] }); setEditDep(null); deployForm.reset(); },
+    onError: (e: any) => toast.error(e.response?.data?.error?.message ?? 'Failed to update'),
+  });
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deploymentApi.remove(id),
+    onSuccess: () => { toast.success('Deployment deleted'); qc.invalidateQueries({ queryKey: ['deployments'] }); setViewDep(null); },
+    onError: () => toast.error('Failed to delete deployment'),
+  });
+
+  const openEdit = (d: any) => {
+    setViewDep(null);
+    setEditDep(d);
+    deployForm.reset({
+      employeeId: d.employee?.id ?? '',
+      siteId: d.site?.id ?? '',
+      tenderId: d.tender?.id ?? '',
+      shiftId: d.shift?.id ?? '',
+      startDate: d.startDate ? d.startDate.slice(0, 10) : '',
+      endDate: d.endDate ? d.endDate.slice(0, 10) : '',
+      notes: d.notes ?? '',
+    });
+  };
 
   const TABS = [
     { id: 'deployments', label: 'Deployments', icon: Users },
@@ -148,46 +249,77 @@ export default function DeploymentPage() {
     { id: 'shifts', label: 'Shifts', icon: Clock },
   ] as const;
 
+  // Edit/Create form fields shared
+  const DeployFormFields = () => (
+    <>
+      <F label="Employee *" error={deployForm.formState.errors.employeeId?.message}>
+        <select {...deployForm.register('employeeId')} className="input-field w-full">
+          <option value="">Select employee</option>
+          {(employees as any[]).map((e: any) => <option key={e.id} value={e.id}>{e.firstName} {e.lastName} — {e.employeeCode}</option>)}
+        </select>
+      </F>
+      <F label="Site">
+        <select {...deployForm.register('siteId')} className="input-field w-full">
+          <option value="">Select site (optional)</option>
+          {(modalSites as any[]).map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </F>
+      <F label="Tender">
+        <select {...deployForm.register('tenderId')} className="input-field w-full">
+          <option value="">Select tender (optional)</option>
+          {(tendersData as any[]).map((t: any) => <option key={t.id} value={t.id}>{t.tenderName}</option>)}
+        </select>
+      </F>
+      <F label="Shift">
+        <select {...deployForm.register('shiftId')} className="input-field w-full">
+          <option value="">Select shift (optional)</option>
+          {(modalShifts as any[]).map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.startTime}–{s.endTime})</option>)}
+        </select>
+      </F>
+      <div className="grid grid-cols-2 gap-3">
+        <F label="Start Date *" error={deployForm.formState.errors.startDate?.message}>
+          <input {...deployForm.register('startDate')} type="date" className="input-field w-full" />
+        </F>
+        <F label="End Date">
+          <input {...deployForm.register('endDate')} type="date" className="input-field w-full" />
+        </F>
+      </div>
+      <F label="Notes">
+        <textarea {...deployForm.register('notes')} rows={2} className="input-field w-full resize-none" placeholder="Any special instructions..." />
+      </F>
+    </>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Deploy Modal */}
+      {/* View Panel */}
+      {viewDep && (
+        <ViewPanel
+          dep={viewDep}
+          onClose={() => setViewDep(null)}
+          onEdit={() => openEdit(viewDep)}
+          onEnd={() => { if (confirm('End this deployment?')) endMut.mutate({ id: viewDep.id }); }}
+          onDelete={() => { if (confirm('Delete this deployment? This cannot be undone.')) deleteMut.mutate(viewDep.id); }}
+        />
+      )}
+
+      {/* Edit Modal */}
+      <Modal open={!!editDep} onClose={() => { setEditDep(null); deployForm.reset(); }} title="Edit Deployment">
+        <form onSubmit={deployForm.handleSubmit(d => editMut.mutate({ id: editDep.id, data: d }))} className="space-y-4">
+          <DeployFormFields />
+          <div className="flex gap-2 pt-2">
+            <button type="submit" className="btn-primary flex-1" disabled={editMut.isPending}>
+              <Save size={14} /> {editMut.isPending ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button type="button" className="btn-secondary" onClick={() => { setEditDep(null); deployForm.reset(); }}>Cancel</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Create Modal */}
       <Modal open={showDeployModal} onClose={() => { setShowDeployModal(false); deployForm.reset(); }} title="New Deployment">
         <form onSubmit={deployForm.handleSubmit(d => deployMut.mutate(d))} className="space-y-4">
-          <F label="Employee *" error={deployForm.formState.errors.employeeId?.message}>
-            <select {...deployForm.register('employeeId')} className="input-field w-full">
-              <option value="">Select employee</option>
-              {(employees as any[]).map((e: any) => <option key={e.id} value={e.id}>{e.firstName} {e.lastName} — {e.employeeCode}</option>)}
-            </select>
-          </F>
-          <F label="Site">
-            <select {...deployForm.register('siteId')} className="input-field w-full">
-              <option value="">Select site (optional)</option>
-              {(modalSites as any[]).map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </F>
-          <F label="Tender">
-            <select {...deployForm.register('tenderId')} className="input-field w-full">
-              <option value="">Select tender (optional)</option>
-              {(tendersData as any[]).map((t: any) => <option key={t.id} value={t.id}>{t.tenderName}</option>)}
-            </select>
-          </F>
-          <F label="Shift">
-            <select {...deployForm.register('shiftId')} className="input-field w-full">
-              <option value="">Select shift (optional)</option>
-              {(modalShifts as any[]).map((s: any) => <option key={s.id} value={s.id}>{s.name} ({s.startTime}–{s.endTime})</option>)}
-            </select>
-          </F>
-          <div className="grid grid-cols-2 gap-3">
-            <F label="Start Date *" error={deployForm.formState.errors.startDate?.message}>
-              <input {...deployForm.register('startDate')} type="date" className="input-field w-full" />
-            </F>
-            <F label="End Date">
-              <input {...deployForm.register('endDate')} type="date" className="input-field w-full" />
-            </F>
-          </div>
-          <F label="Notes">
-            <textarea {...deployForm.register('notes')} rows={2} className="input-field w-full resize-none" placeholder="Any special instructions..." />
-          </F>
+          <DeployFormFields />
           <div className="flex gap-2 pt-2">
             <button type="submit" className="btn-primary flex-1" disabled={deployMut.isPending}>
               <Save size={14} /> {deployMut.isPending ? 'Creating...' : 'Create Deployment'}
@@ -301,7 +433,7 @@ export default function DeploymentPage() {
           <table className="w-full">
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                {['Employee', 'Site', 'Tender', 'Shift', 'Start Date', 'Status', ''].map(h => (
+                {['Employee', 'Site', 'Tender', 'Shift', 'Start Date', 'Status', 'Actions'].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>{h}</th>
                 ))}
               </tr>
@@ -330,13 +462,26 @@ export default function DeploymentPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    {d.status === 'ACTIVE' && (
-                      <button className="opacity-0 group-hover:opacity-100 transition-opacity text-xs px-2 py-1 rounded-lg"
-                        style={{ background: 'rgba(244,63,94,0.1)', color: '#f87171', border: '1px solid rgba(244,63,94,0.2)' }}
-                        onClick={() => { if (confirm('End this deployment?')) endMut.mutate({ id: d.id }); }}>
-                        End
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button title="View" onClick={() => setViewDep(d)}
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                        <Eye size={14} />
                       </button>
-                    )}
+                      {d.status === 'ACTIVE' && <>
+                        <button title="Edit" onClick={() => openEdit(d)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#818cf8' }}>
+                          <Pencil size={14} />
+                        </button>
+                        <button title="End" onClick={() => { if (confirm('End this deployment?')) endMut.mutate({ id: d.id }); }}
+                          className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#fbbf24' }}>
+                          <CalendarOff size={14} />
+                        </button>
+                      </>}
+                      <button title="Delete" onClick={() => { if (confirm('Delete this deployment? This cannot be undone.')) deleteMut.mutate(d.id); }}
+                        className="p-1.5 rounded-lg hover:bg-white/10 transition-colors" style={{ color: '#f87171' }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

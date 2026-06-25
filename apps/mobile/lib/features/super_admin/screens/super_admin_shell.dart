@@ -46,7 +46,8 @@ class SuperAdminShell extends ConsumerWidget {
         path.startsWith('/sa/clients') ||
         path.startsWith('/sa/employees') ||
         path.startsWith('/sa/issues') ||
-        path.startsWith('/sa/complaints')) { return 4; }
+        path.startsWith('/sa/complaints') ||
+        path.startsWith('/sa/work-orders')) { return 4; }
     return 0;
   }
 
@@ -239,6 +240,11 @@ class _SaDrawer extends ConsumerWidget {
                       icon: Icons.business_outlined,
                       label: 'Clients',
                       route: '/sa/clients',
+                    ),
+                    _SaNavItem(
+                      icon: Icons.assignment_outlined,
+                      label: 'Work Orders',
+                      route: '/sa/work-orders',
                     ),
                     _SaNavHeader('Finance'),
                     _SaNavItem(
